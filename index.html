@@ -196,11 +196,11 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
         </section>
 
-        <!-- 特選備案選擇區 -->
+        <!-- 🌟 特選備案選擇區 (僅當點選今日特選飯時出現，預設未選) -->
         <section id="specialBackupSection" class="hidden mood-card rounded-xl p-4 border-2 border-amber-500 bg-amber-50/50 space-y-2">
           <div class="flex items-center space-x-2 text-amber-950 font-bold text-sm">
             <i class="fa-solid fa-arrows-rotate text-amber-700"></i>
-            <span>特選備用選項：若「今日特選飯」提前額滿售完，您要改訂什麼？</span>
+            <span>特選備用選項：若「今日特選飯」提前額滿售完，您要改訂什麼？ <span class="text-xs text-red-600 font-bold">*必選</span></span>
           </div>
           <p class="text-xs text-gray-600 leading-relaxed">
             若廠商告知今日特餐配額不足，管理員將直接為您改訂此備案（括號內為價格差異）：
@@ -682,7 +682,7 @@
       weeklyImageBase64: '',
       orders: [],
       currentCart: {},
-      selectedBackupItem: 'b2',
+      selectedBackupItem: '', // 預設為空 (強制同仁手動選取)
       isTodayOpen: true,
       timeLimit: {
         enabled: true,
@@ -813,28 +813,36 @@
       return { quota, orderedCount, remaining, isSoldOut: remaining <= 0 };
     }
 
+    // 🌟 備案下拉選單：預設為空「請選擇」，強制同仁主動挑選
     function renderBackupSelectOptions() {
       const sel = document.getElementById('specialBackupSelect');
       if (!sel) return;
       const backupCandidates = FIXED_MENU.bento.filter(b => b.id !== 'b1');
-      sel.innerHTML = backupCandidates.map(b => {
+      let optionsHtml = `<option value="">-- 請選擇備用替代餐點 (必選) --</option>`;
+      optionsHtml += backupCandidates.map(b => {
         const diff = b.price - 90;
         const diffText = diff > 0 ? `(需補 +$${diff})` : diff < 0 ? `(需退 -$${Math.abs(diff)})` : `(金額同為 $90)`;
         return `<option value="${b.id}" ${b.id === state.selectedBackupItem ? 'selected' : ''}>${b.name} $${b.price} ${diffText}</option>`;
       }).join('');
+      sel.innerHTML = optionsHtml;
     }
 
     function handleBackupChange(val) {
       state.selectedBackupItem = val;
+      const hintEl = document.getElementById('backupDiffHint');
+      if (!hintEl) return;
+      if (!val) {
+        hintEl.textContent = '⚠️ 請務必選擇替代備案，以便特餐不足時自動轉單！';
+        hintEl.className = 'text-xs font-bold text-red-600';
+        return;
+      }
       const target = FIXED_MENU.bento.find(b => b.id === val);
       if (target) {
         const diff = target.price - 90;
-        const hintEl = document.getElementById('backupDiffHint');
-        if (hintEl) {
-          if (diff > 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將補差額 +$${diff} 元。`;
-          else if (diff < 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將退還差額 -$${Math.abs(diff)} 元。`;
-          else hintEl.textContent = `💡 金額相同，不需補差額。`;
-        }
+        hintEl.className = 'text-xs font-bold text-amber-800';
+        if (diff > 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將補差額 +$${diff} 元。`;
+        else if (diff < 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將退還差額 -$${Math.abs(diff)} 元。`;
+        else hintEl.textContent = `💡 金額同為 $90，不需補退差額。`;
       }
     }
 
@@ -1023,6 +1031,8 @@
         state.selectedBackupItem = order.backupItem.id;
         const backupSelect = document.getElementById('specialBackupSelect');
         if (backupSelect) backupSelect.value = order.backupItem.id;
+      } else {
+        state.selectedBackupItem = '';
       }
       renderAll();
       showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
@@ -1444,11 +1454,18 @@
       const alacarteBox = document.getElementById('menuAlaCarteList');
       if (alacarteBox) alacarteBox.innerHTML = FIXED_MENU.alacarte.map(renderMenuCard).join('');
 
+      // 🌟 僅當購物車有特選飯時，顯示備案卡片
       const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
       const backupSection = document.getElementById('specialBackupSection');
       if (backupSection) {
         backupSection.classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled);
-        if (hasSpecialInCart) handleBackupChange(state.selectedBackupItem);
+        if (hasSpecialInCart) {
+          handleBackupChange(state.selectedBackupItem);
+        } else {
+          state.selectedBackupItem = '';
+          const sel = document.getElementById('specialBackupSelect');
+          if (sel) sel.value = '';
+        }
       }
 
       const seasonalSec = document.getElementById('seasonalSection');
@@ -1609,6 +1626,7 @@
 
     function resetCurrentSelection() {
       state.currentCart = {};
+      state.selectedBackupItem = '';
       const noteInput = document.getElementById('orderNoteInput');
       if (noteInput) noteInput.value = '';
       renderMenuLists();
@@ -1616,6 +1634,7 @@
       renderHeaderAndBanner();
     }
 
+    // 🌟 送出訂單：若有選特選飯，強制驗證是否已選備案
     function submitOrder() {
       if (!isCurrentlyOpen()) {
         alert(state.isTodayOpen ? '抱歉，目前已超過開放點餐時段！' : '抱歉，今日暫停提供點餐服務！');
@@ -1637,6 +1656,17 @@
           alert(`⚠️ 抱歉！今日特選飯目前已無足夠名額！\n請更換其他餐點再重新送出。`);
           delete state.currentCart['b1'];
           renderAll();
+          return;
+        }
+
+        // 🌟 嚴格防呆：未選擇備用品項不可送出
+        if (!state.selectedBackupItem) {
+          alert('⚠️ 您有點選「今日特選飯」，請先在下方「特選備用選項」選擇替代餐點！\n避免店家特餐售完時無法為您及時轉單。');
+          const backupSelect = document.getElementById('specialBackupSelect');
+          if (backupSelect) {
+            backupSelect.focus();
+            backupSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
           return;
         }
       }
@@ -1669,7 +1699,7 @@
       const dayInfo = getDayInfo();
 
       let backupItemInfo = null;
-      if (specialQtyInCart > 0) {
+      if (specialQtyInCart > 0 && state.selectedBackupItem) {
         const backupTarget = FIXED_MENU.bento.find(b => b.id === state.selectedBackupItem);
         if (backupTarget) {
           backupItemInfo = {
