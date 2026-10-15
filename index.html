@@ -46,7 +46,7 @@
       </div>
     </div>
 
-    <!-- 管理員模式切換分頁列 -->
+    <!-- 管理員切換分頁列 -->
     <div id="adminNavTabs" class="hidden bg-emerald-950/80 border-t border-emerald-800">
       <div class="max-w-4xl mx-auto px-4 flex space-x-1 py-1.5">
         <button onclick="switchView('order')" id="tabOrder" class="flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow">
@@ -148,13 +148,13 @@
         </div>
       </div>
 
-      <!-- 結單/非時段提示橫幅 -->
+      <!-- 結單提示橫幅 -->
       <div id="closedAlertBanner" class="hidden bg-red-100 border-l-4 border-red-600 text-red-800 p-4 rounded-r-xl shadow-sm">
         <div class="flex items-center">
           <i class="fa-solid fa-lock text-xl mr-3"></i>
           <div>
-            <p class="font-bold" id="closedAlertTitle">目前非訂餐開放時段，已暫停下單！</p>
-            <p class="text-xs mt-0.5" id="closedAlertDetail">如需加點或修改，請直接聯繫訂便當管理員。</p>
+            <p class="font-bold">目前非訂餐開放時段，已暫停下單！</p>
+            <p class="text-xs mt-0.5">如需加點或修改，請直接聯繫訂便當管理員。</p>
           </div>
         </div>
       </div>
@@ -209,11 +209,12 @@
     <!-- ==================== 後台 1：訂單管理與一鍵匯出 ==================== -->
     <div id="viewDashboard" class="hidden space-y-6">
       
+      <!-- 頂部卡片 -->
       <div class="mood-card rounded-xl p-5 shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
           <div>
             <h2 class="text-xl font-bold mood-green-text">後台訂單總覽與結單匯出</h2>
-            <p class="text-xs text-gray-500 mt-0.5" id="adminCurrentStatusHint">載入時段狀態中...</p>
+            <p class="text-xs text-gray-500 mt-0.5" id="adminCurrentStatusHint">載入狀態中...</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <button onclick="toggleManualOverride()" id="btnManualOverride" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition">
@@ -241,20 +242,44 @@
         </div>
       </div>
 
-      <div class="mood-card rounded-xl p-5 shadow-sm">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="font-bold mood-green-text">
-            <i class="fa-solid fa-share-nodes mr-1"></i>結單一鍵匯出公告 (適合貼至 LINE / 群組)
-          </h3>
-          <button onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center">
+      <!-- 📢 升級：結單一鍵匯出公告區 (含付款狀態篩選) -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div>
+            <h3 class="font-bold mood-green-text">
+              <i class="fa-solid fa-share-nodes mr-1"></i>結單一鍵匯出公告 (適合貼至 LINE / 群組)
+            </h3>
+            <p class="text-xs text-gray-500">選擇匯出格式後，點擊右方按鈕即可一鍵複製文字</p>
+          </div>
+          <button onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center justify-center">
             <i class="fa-regular fa-copy mr-1.5"></i> 一鍵複製文字
           </button>
         </div>
-        <textarea id="exportTextarea" rows="10" readonly 
-          class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-sm font-mono focus:outline-none"></textarea>
+
+        <!-- 匯出顯示篩選開關 -->
+        <div class="bg-gray-100 p-2.5 rounded-lg flex flex-wrap items-center gap-3 text-xs">
+          <span class="font-bold text-gray-700"><i class="fa-solid fa-filter mr-1"></i>匯出名單模式：</span>
+          <label class="inline-flex items-center space-x-1 cursor-pointer">
+            <input type="radio" name="exportFilter" value="all" checked onchange="changeExportMode('all')" class="text-emerald-700">
+            <span>全部列出 (標註已付/未付)</span>
+          </label>
+          <label class="inline-flex items-center space-x-1 cursor-pointer">
+            <input type="radio" name="exportFilter" value="unpaidOnly" onchange="changeExportMode('unpaidOnly')" class="text-emerald-700">
+            <span class="text-red-700 font-bold">僅列未付款同仁 (催繳用)</span>
+          </label>
+          <label class="inline-flex items-center space-x-1 cursor-pointer">
+            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
+            <span class="text-emerald-800 font-bold">僅列已付款同仁</span>
+          </label>
+        </div>
+
+        <textarea id="exportTextarea" rows="11" readonly 
+          class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-xs font-mono focus:outline-none"></textarea>
       </div>
 
+      <!-- 下方兩欄 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 左：給店家 -->
         <div class="mood-card rounded-xl p-5 shadow-sm">
           <h3 class="font-bold mood-green-text border-b pb-2 mb-3">
             <i class="fa-solid fa-phone-volume mr-1"></i>給店家：各品項數量匯總
@@ -262,10 +287,14 @@
           <div id="adminItemSummaryList" class="space-y-2 text-sm"></div>
         </div>
 
+        <!-- 右：收款管理 (改為勾選框 Checkbox) -->
         <div class="mood-card rounded-xl p-5 shadow-sm">
-          <h3 class="font-bold mood-green-text border-b pb-2 mb-3">
-            <i class="fa-solid fa-coins mr-1"></i>同仁下單明細與收款管理
-          </h3>
+          <div class="flex justify-between items-center border-b pb-2 mb-3">
+            <h3 class="font-bold mood-green-text">
+              <i class="fa-solid fa-coins mr-1"></i>同仁下單明細與收款管理
+            </h3>
+            <span class="text-xs text-emerald-800 font-bold" id="paymentProgressText">收款進度：0/0</span>
+          </div>
           <div id="adminPersonOrderList" class="space-y-3 text-sm"></div>
         </div>
       </div>
@@ -274,7 +303,7 @@
     <!-- ==================== 後台 2：設定開放時段與菜單 ==================== -->
     <div id="viewWeekly" class="hidden space-y-6">
       
-      <!-- ⏰ 新增：訂餐開放時段設定卡片 -->
+      <!-- 開放時段設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <div class="flex justify-between items-center border-b pb-2">
           <h2 class="text-xl font-bold mood-green-text">
@@ -282,10 +311,6 @@
           </h2>
           <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-bold">自動定時開關</span>
         </div>
-        
-        <p class="text-sm text-gray-600">
-          設定每日同仁可點餐的時間範圍。若超過設定時段，系統將<b>自動停止點餐並顯示結單</b>，避免同仁逾時下單。
-        </p>
 
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
           <div class="flex items-center space-x-3">
@@ -312,7 +337,7 @@
             </div>
           </div>
           <div class="text-xs text-gray-500 flex justify-between items-center">
-            <span>💡 建議範例：開始時間 08:30 / 截止時間 10:30</span>
+            <span>💡 預設時段：08:30 ～ 10:30</span>
             <button onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
               儲存時段設定
             </button>
@@ -320,7 +345,7 @@
         </div>
       </div>
 
-      <!-- 菜單圖片上傳與 AI 辨識 -->
+      <!-- 菜單圖片與 AI 辨識 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
           <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>上傳當週照片 ＆ 菜單設定
@@ -474,7 +499,6 @@
       6: { dayLabel: '星期六', dateStr: '10/17', special: '番茄煲牛肉', soup: '剝皮辣椒雞湯' }
     };
 
-    // 系統狀態
     let state = {
       isAdmin: false,
       selectedDay: 1,
@@ -482,80 +506,61 @@
       weeklyImageBase64: '',
       orders: [],
       currentCart: {},
-      
-      // ⏰ 時段控制狀態
       timeLimit: {
-        enabled: true,        // 是否啟用定時
-        startTime: '08:30',   // 開始點餐時間 (預設 08:30)
-        endTime: '10:30'      // 截止點餐時間 (預設 10:30)
+        enabled: true,
+        startTime: '08:30',
+        endTime: '10:30'
       },
-      manualOverride: null    // 管理員手動覆寫 (null: 依時段自動, 'open': 強制開放, 'closed': 強制結單)
+      manualOverride: null,
+      exportFilterMode: 'all' // 'all', 'unpaidOnly', 'paidOnly'
     };
 
-    // 安全讀取與寫入 LocalStorage (防 Safari 無痕報錯)
     function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function sSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
     window.addEventListener('DOMContentLoaded', () => {
-      // 判斷今日星期幾
       const todayDay = new Date().getDay();
       state.selectedDay = (todayDay >= 1 && todayDay <= 6) ? todayDay : 1;
       document.getElementById('daySelect').value = state.selectedDay;
 
-      // 載入記憶姓名
       const savedName = sGet('moodfood_user_name');
       if (savedName) {
         document.getElementById('userNameInput').value = savedName;
         document.getElementById('savedNameHint').classList.remove('hidden');
       }
 
-      // 載入菜單
       const localWeekly = sGet('moodfood_weekly_menu');
       if (localWeekly) state.weeklyMenu = JSON.parse(localWeekly);
 
-      // 載入圖片
       const localImg = sGet('moodfood_weekly_img');
       if (localImg) state.weeklyImageBase64 = localImg;
 
-      // 載入訂單
       const localOrders = sGet('moodfood_orders');
       if (localOrders) state.orders = JSON.parse(localOrders);
 
-      // ⏰ 載入時段設定
       const localTime = sGet('moodfood_time_config');
       if (localTime) state.timeLimit = JSON.parse(localTime);
 
       const localOverride = sGet('moodfood_manual_override');
       if (localOverride) state.manualOverride = localOverride;
 
-      // 載入 API Key
       const savedKey = sGet('moodfood_gemini_key');
       if (savedKey) document.getElementById('geminiApiKeyInput').value = savedKey;
 
-      // 初始化表單
       document.getElementById('timeLimitEnabled').checked = state.timeLimit.enabled;
       document.getElementById('startTimeInput').value = state.timeLimit.startTime;
       document.getElementById('endTimeInput').value = state.timeLimit.endTime;
 
-      // 每秒檢查一次時間與更新狀態
       setInterval(checkTimeAndStatus, 1000);
       checkTimeAndStatus();
-
       renderAll();
     });
 
-    /**************************************************************
-     * ⏰ 時段判斷核心邏輯
-     **************************************************************/
     function isCurrentlyOpen() {
-      // 1. 如果管理員有手動強制覆寫
       if (state.manualOverride === 'open') return true;
       if (state.manualOverride === 'closed') return false;
-
-      // 2. 如果未啟用定時限制，預設全天開放
       if (!state.timeLimit.enabled) return true;
 
-      // 3. 依據目前時間比較
       const now = new Date();
       const currentHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       return (currentHM >= state.timeLimit.startTime && currentHM <= state.timeLimit.endTime);
@@ -571,20 +576,18 @@
       const closedAlert = document.getElementById('closedAlertBanner');
       const submitBtn = document.getElementById('btnSubmitOrder');
       const btnManual = document.getElementById('btnManualOverride');
-
-      // 更新前台時段提醒文字
       const noticeText = document.getElementById('timeNoticeText');
+
       if (state.manualOverride === 'open') {
-        noticeText.innerHTML = `<b class="text-amber-700">【管理員強制開放點餐中】</b> (原設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime})`;
+        noticeText.innerHTML = `<b class="text-amber-700">【管理員手動開放中】</b> (設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime})`;
       } else if (state.manualOverride === 'closed') {
         noticeText.innerHTML = `<b class="text-red-700">【管理員手動結單鎖定中】</b>`;
       } else if (state.timeLimit.enabled) {
-        noticeText.textContent = `每日定時開放點餐時段：${state.timeLimit.startTime} ～ ${state.timeLimit.endTime} (逾時自動結單)`;
+        noticeText.textContent = `每日開放點餐時段：${state.timeLimit.startTime} ～ ${state.timeLimit.endTime} (逾時自動結單)`;
       } else {
-        noticeText.textContent = `全天開放點餐中 (由管理員手動結單)`;
+        noticeText.textContent = `全天開放點餐中 (手動結單)`;
       }
 
-      // 更新按鈕與橫幅
       if (open) {
         badge.textContent = '開放點餐中';
         badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500 text-white';
@@ -609,7 +612,6 @@
         }
       }
 
-      // 更新後台提示說明
       const hint = document.getElementById('adminCurrentStatusHint');
       if (hint) {
         hint.textContent = `目前系統狀態：${open ? '【開放中】' : '【已鎖定】'} ｜ 設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime}`;
@@ -636,15 +638,12 @@
         showToast('🔒 管理員已手動結單！');
       } else {
         state.manualOverride = 'open';
-        showToast('🔓 管理員已手動強制開放點餐！');
+        showToast('🔓 管理員已手動開放點餐！');
       }
       sSet('moodfood_manual_override', state.manualOverride);
       checkTimeAndStatus();
     }
 
-    /**************************************************************
-     * 一般畫面渲染
-     **************************************************************/
     function renderAll() {
       renderHeaderAndBanner();
       renderMenuLists();
@@ -679,7 +678,6 @@
         if (d) opt.textContent = `${d.dateStr} (${d.dayLabel}) - 特選：${d.special}`;
       });
 
-      // 一覽表
       const overviewGrid = document.getElementById('weeklyOverviewGrid');
       overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
         const d = state.weeklyMenu[k];
@@ -787,9 +785,6 @@
       `).join('');
     }
 
-    /**************************************************************
-     * 點餐與訂單操作
-     **************************************************************/
     function saveUserName(val) {
       sSet('moodfood_user_name', val.trim());
       document.getElementById('savedNameHint').classList.toggle('hidden', !val.trim());
@@ -829,7 +824,7 @@
 
     function submitOrder() {
       if (!isCurrentlyOpen()) {
-        alert('抱歉，目前已超過開放點餐時段！如需加點請洽管理員。');
+        alert('抱歉，目前非點餐開放時段！如需加點請洽管理員。');
         return;
       }
 
@@ -880,8 +875,12 @@
       };
 
       const existingIdx = state.orders.findIndex(o => o.name === userName);
-      if (existingIdx >= 0) state.orders[existingIdx] = newOrder;
-      else state.orders.push(newOrder);
+      if (existingIdx >= 0) {
+        newOrder.paid = state.orders[existingIdx].paid; // 保留原付款狀態
+        state.orders[existingIdx] = newOrder;
+      } else {
+        state.orders.push(newOrder);
+      }
 
       resetCurrentSelection();
       sSet('moodfood_orders', JSON.stringify(state.orders));
@@ -890,17 +889,32 @@
     }
 
     /**************************************************************
-     * 後台統計與管理
+     * 後台訂單統計、勾選付款與多模式匯出
      **************************************************************/
+    function changeExportMode(mode) {
+      state.exportFilterMode = mode;
+      renderAdminDashboard();
+    }
+
     function renderAdminDashboard() {
       const totalPeople = state.orders.length;
       let totalItems = 0;
       let totalAmount = 0;
+      let paidCount = 0;
+      let paidAmount = 0;
+      let unpaidAmount = 0;
       const itemSummaryMap = {};
 
       state.orders.forEach(o => {
         totalItems += o.qty;
         totalAmount += o.total;
+        if (o.paid) {
+          paidCount++;
+          paidAmount += o.total;
+        } else {
+          unpaidAmount += o.total;
+        }
+
         (o.detailedItems || []).forEach(it => {
           if (!itemSummaryMap[it.name]) itemSummaryMap[it.name] = { qty: 0, price: it.price, subtotal: 0 };
           itemSummaryMap[it.name].qty += it.qty;
@@ -912,6 +926,12 @@
       document.getElementById('statTotalItems').textContent = `${totalItems} 份`;
       document.getElementById('statTotalAmount').textContent = `$${totalAmount}`;
 
+      const progressEl = document.getElementById('paymentProgressText');
+      if (progressEl) {
+        progressEl.innerHTML = `收款進度：<b class="text-emerald-700">${paidCount}/${totalPeople}</b> 人 (已收 $${paidAmount} / <span class="text-red-600">待收 $${unpaidAmount}</span>)`;
+      }
+
+      // 給店家數量統計
       const itemSummaryEl = document.getElementById('adminItemSummaryList');
       const itemKeys = Object.keys(itemSummaryMap);
       if (itemKeys.length === 0) {
@@ -928,26 +948,34 @@
         `).join('');
       }
 
+      // 👤 同仁收款管理清單 (升級為直接 Checkbox 勾選)
       const personListEl = document.getElementById('adminPersonOrderList');
       if (state.orders.length === 0) {
         personListEl.innerHTML = `<p class="text-gray-400 py-2">尚無同仁下單</p>`;
       } else {
         personListEl.innerHTML = state.orders.map((o, idx) => `
-          <div class="p-3 rounded-lg border ${o.paid ? 'bg-emerald-50/60 border-emerald-300' : 'bg-white border-gray-200'} flex justify-between items-center gap-2">
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-base text-gray-900">${escapeHtml(o.name)}</span>
-                <span class="text-xs text-gray-400">${o.time}</span>
+          <div class="p-3 rounded-lg border transition ${o.paid ? 'bg-emerald-50/70 border-emerald-300' : 'bg-white border-gray-200'} flex justify-between items-center gap-2">
+            <div class="flex items-start space-x-3">
+              <input type="checkbox" id="chk_paid_${idx}" ${o.paid ? 'checked' : ''} onchange="toggleOrderPaid(${idx}, this.checked)"
+                class="w-5 h-5 mt-1 text-emerald-700 rounded cursor-pointer">
+              <div>
+                <label for="chk_paid_${idx}" class="cursor-pointer">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-base text-gray-900">${escapeHtml(o.name)}</span>
+                    <span class="text-xs ${o.paid ? 'bg-emerald-600 text-white' : 'bg-red-100 text-red-700'} font-bold px-2 py-0.5 rounded-full">
+                      ${o.paid ? '已付' : '未付'}
+                    </span>
+                    <span class="text-xs text-gray-400">${o.time}</span>
+                  </div>
+                  <p class="text-gray-700 mt-0.5 text-xs sm:text-sm">${escapeHtml(o.itemsSummary)}</p>
+                  ${o.note ? `<p class="text-xs text-amber-800 mt-0.5">備註：${escapeHtml(o.note)}</p>` : ''}
+                </label>
               </div>
-              <p class="text-gray-700 mt-0.5">${escapeHtml(o.itemsSummary)}</p>
-              ${o.note ? `<p class="text-xs text-amber-800 mt-0.5">備註：${escapeHtml(o.note)}</p>` : ''}
             </div>
+
             <div class="flex items-center space-x-2 shrink-0">
-              <span class="font-bold text-base text-red-600 mr-1">$${o.total}</span>
-              <button onclick="toggleOrderPaid(${idx})" class="px-2.5 py-1 rounded text-xs font-bold transition ${o.paid ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">
-                ${o.paid ? '<i class="fa-solid fa-check mr-1"></i>已收款' : '標記收款'}
-              </button>
-              <button onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5">
+              <span class="font-bold text-base ${o.paid ? 'text-emerald-800' : 'text-red-600'}">$${o.total}</span>
+              <button onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5" title="刪除">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
@@ -955,31 +983,75 @@
         `).join('');
       }
 
+      // 📋 結單匯出文字產生 (依模式動態篩選)
       const dayInfo = getDayInfo();
       let exportLines = [];
       exportLines.push(`🍱 【牧饗手作食研 - 訂便當結單統計】`);
       exportLines.push(`📅 日期：${dayInfo.dateStr} (${dayInfo.dayLabel})`);
-      exportLines.push(`------------------------------`);
-      exportLines.push(`📊 【餐點數量總計】（共 ${totalItems} 份 / 總計 $${totalAmount}）`);
-      if (itemKeys.length === 0) exportLines.push(`(尚無訂單)`);
-      else itemKeys.forEach(name => exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`));
-      exportLines.push(`------------------------------`);
-      exportLines.push(`💰 【同仁點餐明細與應收】（共 ${totalPeople} 人）`);
-      state.orders.forEach((o, i) => {
-        exportLines.push(`${i + 1}. ${o.name}：${o.itemsSummary}${o.note ? ` (${o.note})` : ''} ➡️ 應收 $${o.total}${o.paid ? ' [已收✅]' : ''}`);
-      });
+      exportLines.push(`----------------------------------------`);
+      exportLines.push(`📊 【餐點總計】（共 ${totalItems} 份 ｜ 總計 $${totalAmount}）`);
+      
+      if (itemKeys.length === 0) {
+        exportLines.push(`(尚無餐點)`);
+      } else {
+        itemKeys.forEach(name => {
+          exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`);
+        });
+      }
+      exportLines.push(`----------------------------------------`);
+
+      if (state.exportFilterMode === 'all') {
+        exportLines.push(`💰 【同仁訂購與收款明細】（共 ${totalPeople} 人，已收 $${paidAmount} / 待收 $${unpaidAmount}）`);
+        state.orders.forEach((o, i) => {
+          const statusTag = o.paid ? ' [已付款✅]' : ' [未付款❌]';
+          exportLines.push(`${i + 1}. ${o.name}：${o.itemsSummary}${o.note ? ` (${o.note})` : ''} ➡️ 應收 $${o.total}${statusTag}`);
+        });
+
+        // 附帶未付款催繳提醒
+        const unpaids = state.orders.filter(o => !o.paid);
+        if (unpaids.length > 0) {
+          exportLines.push(`\n⚠️ 尚未付款同仁 (${unpaids.length}人)：${unpaids.map(u => `${u.name}($${u.total})`).join('、')}，請記得繳費喔！`);
+        } else if (state.orders.length > 0) {
+          exportLines.push(`\n🎉 全數同仁已繳費完畢！感謝配合！`);
+        }
+
+      } else if (state.exportFilterMode === 'unpaidOnly') {
+        const unpaids = state.orders.filter(o => !o.paid);
+        exportLines.push(`🚨 【尚未繳費同仁名單】（共 ${unpaids.length} 人 ｜ 待收金額：$${unpaidAmount}）`);
+        if (unpaids.length === 0) {
+          exportLines.push(`🎉 太棒了！全員皆已完成繳費！`);
+        } else {
+          unpaids.forEach((o, i) => {
+            exportLines.push(`${i + 1}. ${o.name}：應收 $${o.total} (${o.itemsSummary})`);
+          });
+          exportLines.push(`\n📢 請以上同仁有空時記得將便當費用繳給管理員，謝謝大家！`);
+        }
+
+      } else if (state.exportFilterMode === 'paidOnly') {
+        const paids = state.orders.filter(o => o.paid);
+        exportLines.push(`✅ 【已完成繳費同仁名單】（共 ${paids.length} 人 ｜ 已收金額：$${paidAmount}）`);
+        if (paids.length === 0) {
+          exportLines.push(`(尚未有同仁繳費)`);
+        } else {
+          paids.forEach((o, i) => {
+            exportLines.push(`${i + 1}. ${o.name}：已收 $${o.total} (${o.itemsSummary})`);
+          });
+        }
+      }
+
       document.getElementById('exportTextarea').value = exportLines.join('\n');
     }
 
-    function toggleOrderPaid(idx) {
+    function toggleOrderPaid(idx, isChecked) {
       if (!state.orders[idx]) return;
-      state.orders[idx].paid = !state.orders[idx].paid;
+      state.orders[idx].paid = isChecked;
       sSet('moodfood_orders', JSON.stringify(state.orders));
       renderAdminDashboard();
+      showToast(isChecked ? `✅ 已標記「${state.orders[idx].name}」已付款` : `已取消「${state.orders[idx].name}」付款狀態`);
     }
 
     function deleteSingleOrder(idx) {
-      if (!confirm(`確定要刪除該筆訂單嗎？`)) return;
+      if (!confirm(`確定要刪除「${state.orders[idx].name}」的訂單嗎？`)) return;
       state.orders.splice(idx, 1);
       sSet('moodfood_orders', JSON.stringify(state.orders));
       renderAll();
@@ -1000,7 +1072,7 @@
     }
 
     /**************************************************************
-     * 管理員身分與分頁
+     * 管理員身分與菜單管理
      **************************************************************/
     function toggleAdminModal() {
       if (state.isAdmin) {
@@ -1050,9 +1122,6 @@
       renderAll();
     }
 
-    /**************************************************************
-     * 菜單管理與照片上傳
-     **************************************************************/
     function renderWeeklyEditForm() {
       const grid = document.getElementById('weeklyEditFormGrid');
       grid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
