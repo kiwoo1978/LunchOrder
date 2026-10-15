@@ -123,7 +123,7 @@
           </div>
         </div>
 
-        <!-- 常態當日特選與例湯看板 -->
+        <!-- 當日特選與例湯看板 -->
         <div id="regularSpecialBannerSection" class="mt-4 pt-3 border-t border-gray-200">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
@@ -337,7 +337,7 @@
             <span class="text-red-700 font-bold">僅列未付與待補差額 (催繳用)</span>
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
+            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-800 font-bold">
             <span>僅列已結清同仁</span>
           </label>
         </div>
@@ -436,7 +436,7 @@
           <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">季節切換</span>
         </div>
         <p class="text-xs text-gray-600 leading-relaxed">
-          牧饗菜單規範「每日例湯」為<b>冬季限定 (10月~4月)</b>，「現打西瓜汁與蜂蜜檸檬」為<b>夏季限定 (5月~9月)</b>[cite: 2]。請由下方選擇目前要開放訂購的品項：
+          牧饗菜單規範「每日例湯」為<b>冬季限定 (10月~4月)</b>，「現打西瓜汁與蜂蜜檸檬」為<b>夏季限定 (5月~9月)</b>。請由下方選擇目前要開放訂購的品項：
         </p>
 
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
@@ -445,7 +445,7 @@
               <input type="radio" name="seasonMode" value="soup" onchange="handleSeasonChange('soup')" class="text-emerald-700 w-4 h-4">
               <div>
                 <p class="font-bold text-sm text-gray-800">🥣 僅開放【每日例湯】</p>
-                <p class="text-[11px] text-gray-500">冬季限定 (10月~4月)[cite: 2]，隱藏飲品</p>
+                <p class="text-[11px] text-gray-500">冬季限定 (10月~4月)，隱藏飲品</p>
               </div>
             </label>
 
@@ -453,7 +453,7 @@
               <input type="radio" name="seasonMode" value="drink" onchange="handleSeasonChange('drink')" class="text-emerald-700 w-4 h-4">
               <div>
                 <p class="font-bold text-sm text-gray-800">🍹 僅開放【夏季飲品】</p>
-                <p class="text-[11px] text-gray-500">夏季限定 (5月~9月)[cite: 2]，隱藏例湯</p>
+                <p class="text-[11px] text-gray-500">夏季限定 (5月~9月)，隱藏例湯</p>
               </div>
             </label>
 
@@ -693,8 +693,689 @@
 
   <script>
     /**************************************************************
-     * 點餐與互動邏輯
+     * 腳本與資料完整執行邏輯
      **************************************************************/
+    const DEFAULT_FIXED_MENU = {
+      bento: [
+        { id: 'b1', name: '今日特選飯', price: 90, tag: '限量', tagType: 'badge-limit', isSpecial: true },
+        { id: 'b2', name: '醬燒雞腿飯', price: 110, tag: '推薦', tagType: 'badge-rec' },
+        { id: 'b3', name: '香滷控肉飯', price: 110, tag: '', tagType: '' },
+        { id: 'b4', name: '燒烤雞排飯', price: 110, tag: '', tagType: '' },
+        { id: 'b5', name: '鐵板牛肉飯', price: 110, tag: 'NEW!', tagType: 'badge-new' },
+        { id: 'b6', name: '蒲燒鯛魚飯', price: 110, tag: '', tagType: '' },
+        { id: 'b7', name: '椒鹽排骨飯', price: 100, tag: '推薦', tagType: 'badge-rec' },
+        { id: 'b8', name: '蔥爆肉片飯', price: 100, tag: '', tagType: '' },
+        { id: 'b9', name: '香滷大排飯', price: 100, tag: '', tagType: '' },
+        { id: 'b10', name: '糖醋雞丁飯', price: 100, tag: '推薦', tagType: 'badge-rec' },
+        { id: 'b11', name: '鹹酥鯖魚飯', price: 110, tag: 'NEW!', tagType: 'badge-new' },
+        { id: 'b12', name: '雞絲飯便當', price: 80, tag: '', tagType: '' }
+      ],
+      alacarte: [
+        { id: 'a1', name: '醬燒雞腿(單點)', price: 80 },
+        { id: 'a2', name: '燒烤雞排(單點)', price: 80 },
+        { id: 'a3', name: '香滷控肉(單點)', price: 80 },
+        { id: 'a4', name: '鐵板牛肉(單點)', price: 80 },
+        { id: 'a5', name: '鹹酥鯖魚(單點)', price: 80 },
+        { id: 'a6', name: '蒲燒鯛魚(單點)', price: 80 },
+        { id: 'a7', name: '椒鹽排骨(單點)', price: 70 },
+        { id: 'a8', name: '香滷大排(單點)', price: 70 },
+        { id: 'a9', name: '糖醋雞丁(單點)', price: 70 },
+        { id: 'a10', name: '蔥爆肉片(單點)', price: 70 },
+        { id: 'a11', name: '菜盒(單點)', price: 70 }
+      ],
+      drinkSoup: [
+        { id: 'd1', name: '每日例湯', price: 40, note: '冬季限定 (10月~4月)', isSoup: true },
+        { id: 'd2', name: '新鮮現打西瓜汁', price: 40, note: '夏季限定 (5月~9月)', isSummerDrink: true },
+        { id: 'd3', name: '特調蜂蜜檸檬', price: 40, note: '夏季限定 (5月~9月)', isSummerDrink: true }
+      ]
+    };
+
+    const DEFAULT_WEEKLY_MENU = {
+      1: { dayLabel: '星期一', dateStr: '10/12', special: '秘制鹹豬肉', soup: '味噌貢丸蛋花湯', isOff: false },
+      2: { dayLabel: '星期二', dateStr: '10/13', special: '香草烤雞腿排', soup: '香菇雞湯', isOff: false },
+      3: { dayLabel: '星期三', dateStr: '10/14', special: '沙茶羊肉', soup: '竹筍排骨湯', isOff: false },
+      4: { dayLabel: '星期四', dateStr: '10/15', special: '椒麻雞', soup: '魷魚螺肉蒜', isOff: false },
+      5: { dayLabel: '星期五', dateStr: '10/16', special: 'BBQ肩小排', soup: '薑絲肝連湯', isOff: false },
+      6: { dayLabel: '星期六', dateStr: '10/17', special: '番茄煲牛肉', soup: '剝皮辣椒雞湯', isOff: false }
+    };
+
+    const curMonth = new Date().getMonth() + 1;
+    const isSummerMonth = (curMonth >= 5 && curMonth <= 9);
+
+    let state = {
+      isAdmin: false,
+      selectedDay: 1,
+      fixedMenu: JSON.parse(JSON.stringify(DEFAULT_FIXED_MENU)),
+      weeklyMenu: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_MENU)),
+      weeklyImageBase64: '',
+      orders: [],
+      currentCart: {},
+      selectedBackupItem: '',
+      isTodayOpen: true,
+      timeLimit: { enabled: true, startTime: '08:30', endTime: '10:30' },
+      manualOverride: null,
+      exportFilterMode: 'all',
+      emergency: { enabled: false, name: '牧饗客製化便當', price: 150, notice: '今日因特殊狀況，僅提供客製化便當！' },
+      seasonMode: isSummerMonth ? 'drink' : 'soup',
+      globalGeminiApiKey: '',
+      specialQuotaLimit: 5
+    };
+
+    function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function sSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const todayDay = new Date().getDay();
+        state.selectedDay = (todayDay >= 1 && todayDay <= 6) ? todayDay : 1;
+        const daySelectEl = document.getElementById('daySelect');
+        if (daySelectEl) daySelectEl.value = state.selectedDay;
+
+        const savedName = sGet('moodfood_user_name');
+        if (savedName) {
+          const userNameInput = document.getElementById('userNameInput');
+          if (userNameInput) userNameInput.value = savedName;
+          const hint = document.getElementById('savedNameHint');
+          if (hint) hint.classList.remove('hidden');
+        }
+
+        try {
+          const localFixed = sGet('moodfood_fixed_menu_data');
+          if (localFixed) {
+            const parsed = JSON.parse(localFixed);
+            if (parsed && Array.isArray(parsed.bento)) state.fixedMenu.bento = parsed.bento;
+            if (parsed && Array.isArray(parsed.alacarte)) state.fixedMenu.alacarte = parsed.alacarte;
+            if (parsed && Array.isArray(parsed.drinkSoup)) state.fixedMenu.drinkSoup = parsed.drinkSoup;
+          }
+        } catch(e) {}
+
+        try {
+          const localWeekly = sGet('moodfood_weekly_menu');
+          if (localWeekly) {
+            const parsedW = JSON.parse(localWeekly);
+            Object.keys(DEFAULT_WEEKLY_MENU).forEach(k => {
+              if (parsedW && parsedW[k]) {
+                state.weeklyMenu[k] = {
+                  dayLabel: parsedW[k].dayLabel || DEFAULT_WEEKLY_MENU[k].dayLabel,
+                  dateStr: parsedW[k].dateStr || DEFAULT_WEEKLY_MENU[k].dateStr,
+                  special: parsedW[k].special || DEFAULT_WEEKLY_MENU[k].special,
+                  soup: parsedW[k].soup || DEFAULT_WEEKLY_MENU[k].soup,
+                  isOff: !!parsedW[k].isOff
+                };
+              }
+            });
+          }
+        } catch(e) {}
+
+        const localImg = sGet('moodfood_weekly_img');
+        if (localImg) state.weeklyImageBase64 = localImg;
+
+        try {
+          const localOrders = sGet('moodfood_orders');
+          if (localOrders) state.orders = JSON.parse(localOrders) || [];
+        } catch(e) { state.orders = []; }
+
+        const localTodayOpen = sGet('moodfood_is_today_open');
+        if (localTodayOpen !== null) state.isTodayOpen = JSON.parse(localTodayOpen);
+
+        const localTime = sGet('moodfood_time_config');
+        if (localTime) {
+          try { state.timeLimit = JSON.parse(localTime); } catch(e){}
+        }
+
+        const localOverride = sGet('moodfood_manual_override');
+        if (localOverride) state.manualOverride = localOverride;
+
+        const localEmergency = sGet('moodfood_emergency');
+        if (localEmergency) {
+          try { state.emergency = JSON.parse(localEmergency); } catch(e){}
+        }
+
+        const localSeasonMode = sGet('moodfood_season_mode');
+        if (localSeasonMode) state.seasonMode = localSeasonMode;
+
+        const localQuota = sGet('moodfood_special_quota');
+        if (localQuota !== null) state.specialQuotaLimit = Number(localQuota);
+
+        const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
+        if (savedKey) {
+          state.globalGeminiApiKey = savedKey;
+          const apiKeyInput = document.getElementById('geminiApiKeyInput');
+          if (apiKeyInput) apiKeyInput.value = savedKey;
+          const apiKeyHint = document.getElementById('apiKeyStatusHint');
+          if (apiKeyHint) apiKeyHint.textContent = '✅ 已設定共用金鑰，所有管理員裝置皆可直接使用圖片辨識！';
+        }
+
+        const timeLimitCheck = document.getElementById('timeLimitEnabled');
+        if (timeLimitCheck) timeLimitCheck.checked = state.timeLimit.enabled;
+        const startTimeInput = document.getElementById('startTimeInput');
+        if (startTimeInput) startTimeInput.value = state.timeLimit.startTime;
+        const endTimeInput = document.getElementById('endTimeInput');
+        if (endTimeInput) endTimeInput.value = state.timeLimit.endTime;
+
+        const emCheck = document.getElementById('emergencyModeCheckbox');
+        if (emCheck) emCheck.checked = state.emergency.enabled;
+        const emName = document.getElementById('emergencyItemName');
+        if (emName) emName.value = state.emergency.name;
+        const emPrice = document.getElementById('emergencyItemPrice');
+        if (emPrice) emPrice.value = state.emergency.price;
+        const emNotice = document.getElementById('emergencyNoticeInput');
+        if (emNotice) emNotice.value = state.emergency.notice;
+
+        const quotaInput = document.getElementById('inputSpecialQuota');
+        if (quotaInput) quotaInput.value = state.specialQuotaLimit;
+
+        const monthHint = document.getElementById('currentMonthHint');
+        if (monthHint) {
+          monthHint.textContent = `💡 目前月份為 ${curMonth} 月 (${isSummerMonth ? '夏季期間建議開放飲品' : '冬季期間建議開放例湯'})`;
+        }
+
+        renderSeasonRadioUI();
+        renderBackupSelectOptions();
+        updateEmergencyUI();
+        updateTodayOpenBtnUI();
+
+        setInterval(checkTimeAndStatus, 1000);
+        checkTimeAndStatus();
+        renderAll();
+      } catch (err) {
+        console.error("Critical Load Error:", err);
+      }
+    });
+
+    function getAllMenuItemsMap() {
+      const map = {};
+      if (state.emergency && state.emergency.enabled) {
+        map['em_custom'] = { id: 'em_custom', name: state.emergency.name, price: state.emergency.price };
+        return map;
+      }
+      const bentoList = (state.fixedMenu && state.fixedMenu.bento) ? state.fixedMenu.bento : DEFAULT_FIXED_MENU.bento;
+      const alaList = (state.fixedMenu && state.fixedMenu.alacarte) ? state.fixedMenu.alacarte : DEFAULT_FIXED_MENU.alacarte;
+      const dsList = (state.fixedMenu && state.fixedMenu.drinkSoup) ? state.fixedMenu.drinkSoup : DEFAULT_FIXED_MENU.drinkSoup;
+
+      [...bentoList, ...alaList, ...dsList].forEach(it => { if(it && it.id) map[it.id] = it; });
+      return map;
+    }
+
+    function renderAll() {
+      renderHeaderAndBanner();
+      renderMenuLists();
+      renderCartBar();
+      renderPublicOrders();
+      renderAdminDashboard();
+      renderWeeklyEditForm();
+      renderSpecialRosterBox();
+      renderFixedMenuEditor();
+    }
+
+    function getDayInfo() {
+      if (!state.weeklyMenu) state.weeklyMenu = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_MENU));
+      return state.weeklyMenu[state.selectedDay] || DEFAULT_WEEKLY_MENU[1];
+    }
+
+    function getDisplayItemName(item) {
+      if (!item) return '';
+      if (item.id === 'em_custom') return item.name;
+      const dayInfo = getDayInfo();
+      if (item.isSpecial) return `今日特選飯(${dayInfo.special})`;
+      if (item.isSoup) return `每日例湯(${dayInfo.soup})`;
+      return item.name;
+    }
+
+    function getSpecialBentoStats() {
+      const currentUserName = (document.getElementById('userNameInput')?.value || '').trim();
+      let orderedCount = 0;
+
+      (state.orders || []).forEach(o => {
+        if (o.name !== currentUserName) {
+          (o.detailedItems || []).forEach(it => {
+            if (it.id === 'b1') orderedCount += (it.qty || 0);
+          });
+        }
+      });
+
+      const quota = state.specialQuotaLimit || 5;
+      const remaining = Math.max(0, quota - orderedCount);
+      return { quota, orderedCount, remaining, isSoldOut: remaining <= 0 };
+    }
+
+    function renderHeaderAndBanner() {
+      const dayInfo = getDayInfo();
+      const stats = getSpecialBentoStats();
+
+      const headerInfo = document.getElementById('headerDateInfo');
+      if (headerInfo) {
+        if (dayInfo.isOff) {
+          headerInfo.textContent = `🛑 本日店家公休不供餐 (${dayInfo.dateStr} ${dayInfo.dayLabel})`;
+        } else if (state.emergency.enabled) {
+          headerInfo.textContent = `⚠️ 今日特殊供餐模式：${state.emergency.name} ($${state.emergency.price})`;
+        } else {
+          headerInfo.textContent = `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
+        }
+      }
+      
+      const bannerSpecial = document.getElementById('bannerSpecialName');
+      if (bannerSpecial) bannerSpecial.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.special;
+      const bannerSoup = document.getElementById('bannerSoupName');
+      if (bannerSoup) bannerSoup.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.soup;
+
+      const tagRemain = document.getElementById('bannerSpecialRemainTag');
+      const btnAddSpecial = document.getElementById('btnQuickAddSpecial');
+      const hintBento = document.getElementById('specialBentoStockHint');
+
+      if (dayInfo.isOff) {
+        if (tagRemain) {
+          tagRemain.textContent = '本日公休';
+          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-gray-600 text-white';
+        }
+        if (btnAddSpecial) {
+          btnAddSpecial.disabled = true;
+          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
+        }
+        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">🛑 本日公休，全天不開放點餐</span>`;
+      } else if (stats.isSoldOut) {
+        if (tagRemain) {
+          tagRemain.textContent = '今日特餐已售完';
+          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-red-600 text-white';
+        }
+        if (btnAddSpecial) {
+          btnAddSpecial.disabled = true;
+          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
+        }
+        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完</span>`;
+      } else {
+        if (tagRemain) {
+          tagRemain.textContent = `剩餘 ${stats.remaining} 份`;
+          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900';
+        }
+        if (btnAddSpecial) {
+          btnAddSpecial.disabled = false;
+          btnAddSpecial.className = 'bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer';
+        }
+        if (hintBento) hintBento.innerHTML = `配額 ${stats.quota} 份 (尚餘 <b class="text-white">${stats.remaining}</b> 份)`;
+      }
+
+      const soupContainer = document.getElementById('bannerSoupContainer');
+      if (soupContainer) {
+        soupContainer.classList.toggle('hidden', state.seasonMode !== 'soup' || dayInfo.isOff);
+      }
+
+      const selectEl = document.getElementById('daySelect');
+      if (selectEl) {
+        Array.from(selectEl.options).forEach(opt => {
+          const d = state.weeklyMenu[opt.value];
+          if (d) {
+            opt.textContent = `${d.dateStr} (${d.dayLabel}) ${d.isOff ? '[公休不供餐]' : `- 特選：${d.special}`}`;
+          }
+        });
+      }
+
+      const overviewGrid = document.getElementById('weeklyOverviewGrid');
+      if (overviewGrid) {
+        overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
+          const d = state.weeklyMenu[k];
+          const isCurrent = Number(k) === Number(state.selectedDay);
+          return `
+            <div class="p-2.5 rounded-lg border ${d.isOff ? 'bg-gray-200 border-gray-400 opacity-80' : isCurrent ? 'bg-amber-100 border-amber-500 font-bold' : 'bg-gray-50 border-gray-200'}">
+              <div class="text-emerald-900 font-bold">${d.dateStr} (${d.dayLabel})</div>
+              ${d.isOff ? '<div class="text-red-700 font-bold mt-1.5">🛑 公休休息</div>' : `
+                <div class="text-amber-900 mt-1">🍱 ${d.special}</div>
+                <div class="text-emerald-800 mt-0.5">🥣 ${d.soup}</div>
+              `}
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (state.weeklyImageBase64) {
+        const previewFront = document.getElementById('weeklyImagePreviewFront');
+        if (previewFront) previewFront.classList.remove('hidden');
+        const frontImg = document.getElementById('frontMenuImg');
+        if (frontImg) frontImg.src = state.weeklyImageBase64;
+        const adminPreviewArea = document.getElementById('adminImagePreviewArea');
+        if (adminPreviewArea) adminPreviewArea.classList.remove('hidden');
+        const adminImg = document.getElementById('adminPreviewImg');
+        if (adminImg) adminImg.src = state.weeklyImageBase64;
+      }
+    }
+
+    function renderMenuCard(item) {
+      if (!item) return '';
+      const qty = state.currentCart[item.id] || 0;
+      const displayName = getDisplayItemName(item);
+      const isSpecial = item.id === 'b1';
+      const stats = getSpecialBentoStats();
+      const isSoldOut = isSpecial && (stats.remaining - qty <= 0);
+
+      let tagHtml = '';
+      if (item.tag) {
+        tagHtml = `<span class="${item.tagType || 'bg-gray-700'} text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">${item.tag}</span>`;
+      }
+      if (isSpecial) {
+        tagHtml = stats.isSoldOut 
+          ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">已售完</span>`
+          : `<span class="bg-amber-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">剩 ${stats.remaining} 份</span>`;
+      }
+
+      const noteHtml = item.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${item.note}</p>` : '';
+
+      return `
+        <div class="flex items-center justify-between p-3 rounded-xl border transition ${qty > 0 ? 'border-emerald-700 bg-emerald-50/40 shadow-sm' : 'border-gray-200 bg-white'}">
+          <div class="pr-2">
+            <div class="flex items-center flex-wrap">
+              ${tagHtml}
+              <span class="font-bold text-gray-800 ${isSoldOut && qty === 0 ? 'line-through text-gray-400' : ''}">${displayName}</span>
+            </div>
+            ${noteHtml}
+            <p class="text-emerald-800 font-bold mt-1">$${item.price}</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button type="button" onclick="updateCartQty('${item.id}', -1)" 
+              class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 cursor-pointer"
+              ${qty === 0 ? 'disabled' : ''}>
+              <i class="fa-solid fa-minus text-xs"></i>
+            </button>
+            <span class="w-6 text-center font-bold text-base ${qty > 0 ? 'text-emerald-800' : 'text-gray-400'}">${qty}</span>
+            <button type="button" onclick="updateCartQty('${item.id}', 1)" 
+              class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'mood-green text-white hover:bg-emerald-800 cursor-pointer'} flex items-center justify-center font-bold"
+              ${isSoldOut ? 'disabled title="今日特選飯已額滿"' : ''}>
+              <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMenuLists() {
+      const dayInfo = getDayInfo();
+
+      if (state.emergency.enabled) {
+        const emItem = {
+          id: 'em_custom',
+          name: state.emergency.name,
+          price: state.emergency.price,
+          tag: '今日限定',
+          tagType: 'badge-limit',
+          note: '其他餐點皆暫停提供'
+        };
+        const emBox = document.getElementById('emergencyMenuItemBox');
+        if (emBox) emBox.innerHTML = renderMenuCard(emItem);
+      }
+
+      const bentoBox = document.getElementById('menuBentoList');
+      if (bentoBox) bentoBox.innerHTML = (state.fixedMenu.bento || []).map(renderMenuCard).join('');
+      const alacarteBox = document.getElementById('menuAlaCarteList');
+      if (alacarteBox) alacarteBox.innerHTML = (state.fixedMenu.alacarte || []).map(renderMenuCard).join('');
+
+      const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
+      const backupSection = document.getElementById('specialBackupSection');
+      if (backupSection) {
+        backupSection.classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled || (dayInfo && dayInfo.isOff));
+        if (hasSpecialInCart) {
+          handleBackupChange(state.selectedBackupItem);
+        } else {
+          state.selectedBackupItem = '';
+          const sel = document.getElementById('specialBackupSelect');
+          if (sel) sel.value = '';
+        }
+      }
+
+      const seasonalSec = document.getElementById('seasonalSection');
+      const sectionTitle = document.getElementById('drinkSoupSectionTitle');
+      const seasonHint = document.getElementById('drinkSoupSeasonHint');
+      const drinkSoupContainer = document.getElementById('menuDrinkSoupList');
+
+      if (seasonalSec && sectionTitle && seasonHint && drinkSoupContainer) {
+        if (state.seasonMode === 'none' || (dayInfo && dayInfo.isOff)) {
+          seasonalSec.classList.add('hidden');
+        } else {
+          seasonalSec.classList.remove('hidden');
+          if (state.seasonMode === 'soup') {
+            sectionTitle.innerHTML = `例湯專區 <span class="text-xs font-normal opacity-80 ml-2">SOUP</span>`;
+            seasonHint.textContent = `冬季限定 (10月~4月)`;
+            const soupItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSoup);
+            drinkSoupContainer.innerHTML = soupItems.map(renderMenuCard).join('');
+          } else if (state.seasonMode === 'drink') {
+            sectionTitle.innerHTML = `飲品專區 <span class="text-xs font-normal opacity-80 ml-2">DRINKS</span>`;
+            seasonHint.textContent = `夏季限定 (5月~9月)`;
+            const drinkItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSummerDrink);
+            drinkSoupContainer.innerHTML = drinkItems.map(renderMenuCard).join('');
+          }
+        }
+      }
+    }
+
+    function renderCartBar() {
+      const itemMap = getAllMenuItemsMap();
+      let totalQty = 0;
+      let totalPrice = 0;
+      let names = [];
+
+      Object.keys(state.currentCart).forEach(id => {
+        const q = state.currentCart[id];
+        if (q > 0 && itemMap[id]) {
+          totalQty += q;
+          totalPrice += q * itemMap[id].price;
+          names.push(`${getDisplayItemName(itemMap[id])} x${q}`);
+        }
+      });
+
+      const totalQtyEl = document.getElementById('cartTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalQty;
+      const totalPriceEl = document.getElementById('cartTotalPrice');
+      if (totalPriceEl) totalPriceEl.textContent = `$${totalPrice}`;
+      const itemsPreview = document.getElementById('cartItemsPreview');
+      if (itemsPreview) itemsPreview.textContent = names.length > 0 ? names.join('、') : '尚未選擇餐點';
+
+      const curName = (document.getElementById('userNameInput')?.value || '').trim();
+      const existing = (state.orders || []).find(o => o.name === curName);
+      const diffBadge = document.getElementById('cartDiffHintBadge');
+
+      if (diffBadge) {
+        if (existing && (existing.paid || existing.paidAmount > 0) && totalQty > 0) {
+          const paidAmount = existing.paidAmount || existing.total;
+          const diff = totalPrice - paidAmount;
+          diffBadge.classList.remove('hidden');
+          if (diff > 0) {
+            diffBadge.textContent = `需補差額 +$${diff}`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-300';
+          } else if (diff < 0) {
+            diffBadge.textContent = `需退差額 -$${Math.abs(diff)}`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+          } else {
+            diffBadge.textContent = `已付清無需補差額`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-700';
+          }
+        } else {
+          diffBadge.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderPublicOrders() {
+      const countEl = document.getElementById('publicOrderCount');
+      if (countEl) countEl.textContent = state.orders.length;
+      const navCount = document.getElementById('navOrderCount');
+      if (navCount) navCount.textContent = state.orders.length;
+
+      const listEl = document.getElementById('publicOrderList');
+      if (!listEl) return;
+      if (state.orders.length === 0) {
+        listEl.innerHTML = `<p class="text-gray-400 text-center py-3">今日尚無訂單</p>`;
+        return;
+      }
+
+      listEl.innerHTML = state.orders.map(o => {
+        let diffHtml = '';
+        if (o.diff !== undefined && o.diff !== 0) {
+          diffHtml = o.diff > 0 
+            ? `<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold ml-1">需補+$${o.diff}</span>`
+            : `<span class="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold ml-1">退款$${Math.abs(o.diff)}</span>`;
+        }
+        let backupHtml = o.backupItem ? `<span class="text-xs text-amber-800 ml-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">備案:改${o.backupItem.name}</span>` : '';
+
+        return `
+          <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
+              <span class="text-gray-600">${o.itemsSummary}</span>
+              ${backupHtml}
+              ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
+              ${diffHtml}
+            </div>
+            <div class="font-bold text-emerald-800">$${o.total}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderBackupSelectOptions() {
+      const sel = document.getElementById('specialBackupSelect');
+      if (!sel) return;
+      const backupCandidates = (state.fixedMenu.bento || []).filter(b => b.id !== 'b1');
+      let optionsHtml = `<option value="">-- 請選擇備用替代餐點 (必選) --</option>`;
+      optionsHtml += backupCandidates.map(b => {
+        const diff = b.price - 90;
+        const diffText = diff > 0 ? `(需補 +$${diff})` : diff < 0 ? `(需退 -$${Math.abs(diff)})` : `(金額同為 $90)`;
+        return `<option value="${b.id}" ${b.id === state.selectedBackupItem ? 'selected' : ''}>${b.name} $${b.price} ${diffText}</option>`;
+      }).join('');
+      sel.innerHTML = optionsHtml;
+    }
+
+    function handleBackupChange(val) {
+      state.selectedBackupItem = val;
+      const hintEl = document.getElementById('backupDiffHint');
+      if (!hintEl) return;
+      if (!val) {
+        hintEl.textContent = '⚠️ 請務必選擇替代備案，以便特餐不足時自動轉單！';
+        hintEl.className = 'text-xs font-bold text-red-600';
+        return;
+      }
+      const target = (state.fixedMenu.bento || []).find(b => b.id === val);
+      if (target) {
+        const diff = target.price - 90;
+        hintEl.className = 'text-xs font-bold text-amber-800';
+        if (diff > 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將補差額 +$${diff} 元。`;
+        else if (diff < 0) hintEl.textContent = `💡 若特餐售完改訂「${target.name}」，每份將退還差額 -$${Math.abs(diff)} 元。`;
+        else hintEl.textContent = `💡 金額同為 $90，不需補退差額。`;
+      }
+    }
+
+    function changeSpecialQuota(newVal) {
+      const val = Math.max(0, Number(newVal));
+      state.specialQuotaLimit = val;
+      sSet('moodfood_special_quota', val);
+      const quotaInput = document.getElementById('inputSpecialQuota');
+      if (quotaInput) quotaInput.value = val;
+      renderAll();
+      showToast(`📢 已更新今日特餐實際供應上限為：${val} 份！`);
+    }
+
+    function setSpecialQuota(val) { changeSpecialQuota(val); }
+
+    function renderSpecialRosterBox() {
+      const box = document.getElementById('specialOrderRosterBox');
+      if (!box) return;
+      if (!state.isAdmin) {
+        box.innerHTML = '';
+        return;
+      }
+
+      const specialOrders = (state.orders || []).filter(o => (o.detailedItems || []).some(it => it.id === 'b1'));
+      const quota = state.specialQuotaLimit || 5;
+
+      if (specialOrders.length === 0) {
+        box.innerHTML = `<p class="text-xs text-gray-500 py-1">目前尚無同仁點選「今日特選飯」。</p>`;
+        return;
+      }
+
+      let html = `<div class="bg-white p-2.5 rounded-lg border border-amber-300 space-y-2">`;
+      html += `<div class="flex justify-between items-center text-xs font-bold border-b pb-1 text-amber-950">
+        <span>今日特選已訂購順位名單（目前配額：${quota} 份 / 已訂：${specialOrders.length} 份）</span>
+        <span>${specialOrders.length > quota ? `<span class="text-red-600">超額 ${specialOrders.length - quota} 人需處理</span>` : `<span class="text-emerald-700">名額正常</span>`}</span>
+      </div>`;
+
+      specialOrders.forEach((o, index) => {
+        const rank = index + 1;
+        const isExceeded = rank > quota;
+        const backupName = o.backupItem ? o.backupItem.name : '尚未指定備案(預設雞腿飯)';
+        const backupPrice = o.backupItem ? o.backupItem.price : 110;
+        const diffVal = backupPrice - 90;
+
+        html += `
+          <div class="flex flex-wrap justify-between items-center p-2 rounded text-xs ${isExceeded ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200'}">
+            <div class="space-y-0.5">
+              <span class="font-bold text-gray-800">#${rank} ${escapeHtml(o.name)}</span>
+              <span class="text-gray-400 text-[11px] ml-1">(${o.time})</span>
+              ${isExceeded 
+                ? `<span class="bg-red-600 text-white font-bold px-1.5 py-0.5 rounded ml-1 text-[10px]">⚠️ 超額需轉備案</span>` 
+                : `<span class="bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded ml-1 text-[10px]">保留特餐中</span>`}
+              <div class="text-gray-600 text-[11px]">
+                指定備案：<b>${backupName}</b> ($${backupPrice}) ➡️ ${diffVal >= 0 ? `需補+$${diffVal}` : `需退-$${Math.abs(diffVal)}`}
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-1.5 mt-1 sm:mt-0">
+              <button type="button" onclick="convertOrderToBackup('${escapeHtml(o.name)}')" 
+                class="px-2.5 py-1 rounded font-bold transition text-xs ${isExceeded ? 'bg-amber-600 hover:bg-amber-700 text-white shadow cursor-pointer' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer'}">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i>轉為備案餐點
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      box.innerHTML = html;
+    }
+
+    function convertOrderToBackup(userName) {
+      const idx = state.orders.findIndex(o => o.name === userName);
+      if (idx < 0) return;
+      const order = state.orders[idx];
+
+      const backupId = order.backupItem ? order.backupItem.id : 'b2';
+      const backupTarget = (state.fixedMenu.bento || []).find(b => b.id === backupId) || state.fixedMenu.bento[1];
+
+      let specialQty = 0;
+      const newItems = [];
+      (order.detailedItems || []).forEach(it => {
+        if (it.id === 'b1') specialQty += it.qty;
+        else newItems.push(it);
+      });
+
+      if (specialQty === 0) return alert('此訂單目前並無今日特選飯！');
+
+      const existBackupInOrder = newItems.find(it => it.id === backupTarget.id);
+      if (existBackupInOrder) {
+        existBackupInOrder.qty += specialQty;
+      } else {
+        newItems.push({ id: backupTarget.id, name: backupTarget.name, price: backupTarget.price, qty: specialQty });
+      }
+
+      let newTotal = 0;
+      let summaryParts = [];
+      newItems.forEach(it => {
+        newTotal += it.qty * it.price;
+        summaryParts.push(`${it.name} x${it.qty}`);
+      });
+
+      const paidAmount = order.paidAmount || (order.paid ? order.total : 0);
+      const diff = newTotal - paidAmount;
+
+      order.detailedItems = newItems;
+      order.itemsSummary = summaryParts.join('、');
+      order.total = newTotal;
+      order.paidAmount = paidAmount;
+      order.diff = diff;
+      order.paid = (diff <= 0);
+      order.backupItem = null;
+
+      sSet('moodfood_orders', JSON.stringify(state.orders));
+      renderAll();
+      showToast(`✅ 已將「${userName}」的特餐轉為備案「${backupTarget.name}」！(差額: ${diff >= 0 ? `+$${diff}` : `-$${Math.abs(diff)}`})`);
+    }
+
     function handleNameInput(nameVal) {
       const trimmed = nameVal.trim();
       sSet('moodfood_user_name', trimmed);
@@ -751,6 +1432,149 @@
       }
       renderAll();
       showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
+    }
+
+    function saveGeminiKeyAction() {
+      const keyInput = document.getElementById('geminiApiKeyInput');
+      const key = keyInput ? keyInput.value.trim() : '';
+      state.globalGeminiApiKey = key;
+      sSet('moodfood_shared_gemini_key', key);
+      sSet('moodfood_gemini_key', key);
+      const hint = document.getElementById('apiKeyStatusHint');
+      if (hint) {
+        hint.textContent = key ? '✅ 已成功儲存共用金鑰！其他裝置登入後台即可直接使用。' : '⚠️ 已清空共用金鑰。';
+      }
+      showToast('🔑 共用 Gemini API Key 已儲存生效！');
+    }
+
+    function setTodaySystemOpen(openStatus) {
+      state.isTodayOpen = openStatus;
+      sSet('moodfood_is_today_open', JSON.stringify(state.isTodayOpen));
+      updateTodayOpenBtnUI();
+      checkTimeAndStatus();
+      showToast(openStatus ? '✅ 已設定今日為【開放訂餐日】(依時段開放)' : '⛔ 已設定今日為【暫停訂餐日】(全天不開放)');
+    }
+
+    function updateTodayOpenBtnUI() {
+      const btnYes = document.getElementById('btnOpenSystemYes');
+      const btnNo = document.getElementById('btnOpenSystemNo');
+      if (btnYes && btnNo) {
+        if (state.isTodayOpen) {
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow cursor-pointer';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
+        } else {
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow cursor-pointer';
+        }
+      }
+    }
+
+    function toggleEmergencyMode(isChecked) {
+      state.emergency.enabled = isChecked;
+      updateEmergencyUI();
+    }
+
+    function saveEmergencyConfig() {
+      const emCheck = document.getElementById('emergencyModeCheckbox');
+      state.emergency.enabled = emCheck ? emCheck.checked : false;
+      const emName = document.getElementById('emergencyItemName');
+      state.emergency.name = emName ? (emName.value.trim() || '牧饗客製化便當') : '牧饗客製化便當';
+      const emPrice = document.getElementById('emergencyItemPrice');
+      state.emergency.price = emPrice ? (Number(emPrice.value) || 150) : 150;
+      const emNotice = document.getElementById('emergencyNoticeInput');
+      state.emergency.notice = emNotice ? (emNotice.value.trim() || '今日因特殊狀況，僅提供特製客製化便當！') : '今日因特殊狀況，僅提供特製客製化便當！';
+
+      sSet('moodfood_emergency', JSON.stringify(state.emergency));
+      state.currentCart = {};
+      updateEmergencyUI();
+      renderAll();
+      showToast(state.emergency.enabled ? '🚨 突發狀況模式已啟動！已切換為客製化便當菜單' : '✅ 突發狀況模式已關閉，已恢復常態菜單');
+    }
+
+    function updateEmergencyUI() {
+      const isEm = state.emergency.enabled;
+      const tag = document.getElementById('emergencyStatusTag');
+      if (tag) {
+        if (isEm) {
+          tag.textContent = '已啟用';
+          tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-red-600 text-white';
+        } else {
+          tag.textContent = '未啟用';
+          tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-gray-300 text-gray-700';
+        }
+      }
+
+      const notice = document.getElementById('emergencyFrontNotice');
+      if (notice) notice.classList.toggle('hidden', !isEm);
+      const noticeText = document.getElementById('emergencyNoticeText');
+      if (noticeText) noticeText.textContent = state.emergency.notice;
+      const emSection = document.getElementById('emergencyMenuSection');
+      if (emSection) emSection.classList.toggle('hidden', !isEm);
+      const regularContainer = document.getElementById('regularMenuContainer');
+      if (regularContainer) regularContainer.classList.toggle('hidden', isEm);
+      const regularBanner = document.getElementById('regularSpecialBannerSection');
+      if (regularBanner) regularBanner.classList.toggle('hidden', isEm);
+    }
+
+    function handleSeasonChange(val) {
+      state.seasonMode = val;
+      renderSeasonRadioUI();
+    }
+
+    function renderSeasonRadioUI() {
+      const modes = ['soup', 'drink', 'none'];
+      modes.forEach(m => {
+        const lbl = document.getElementById(`lblSeason${m.charAt(0).toUpperCase() + m.slice(1)}`);
+        const radio = document.querySelector(`input[name="seasonMode"][value="${m}"]`);
+        if (state.seasonMode === m) {
+          if (radio) radio.checked = true;
+          if (lbl) lbl.className = 'p-3 border-2 border-emerald-700 rounded-xl flex items-center space-x-2.5 cursor-pointer bg-emerald-50/70 shadow-sm transition';
+        } else {
+          if (lbl) lbl.className = 'p-3 border-2 border-gray-200 rounded-xl flex items-center space-x-2.5 cursor-pointer bg-white transition';
+        }
+      });
+    }
+
+    function saveSeasonSettingBtn() {
+      sSet('moodfood_season_mode', state.seasonMode);
+      if (state.seasonMode === 'soup') {
+        delete state.currentCart['d2']; delete state.currentCart['d3'];
+      } else if (state.seasonMode === 'drink') {
+        delete state.currentCart['d1'];
+      } else {
+        delete state.currentCart['d1']; delete state.currentCart['d2']; delete state.currentCart['d3'];
+      }
+      renderAll();
+      showToast(state.seasonMode === 'soup' ? '🥣 已設定為【冬季限定：僅開放每日例湯】' : state.seasonMode === 'drink' ? '🍹 已設定為【夏季限定：僅開放冷飲】' : '❄️ 已設定為【例湯與飲品皆關閉】');
+    }
+
+    function updateTimeConfig() {
+      const timeLimitCheck = document.getElementById('timeLimitEnabled');
+      state.timeLimit.enabled = timeLimitCheck ? timeLimitCheck.checked : true;
+      const startTimeInput = document.getElementById('startTimeInput');
+      state.timeLimit.startTime = startTimeInput ? (startTimeInput.value || '08:30') : '08:30';
+      const endTimeInput = document.getElementById('endTimeInput');
+      state.timeLimit.endTime = endTimeInput ? (endTimeInput.value || '10:30') : '10:30';
+      sSet('moodfood_time_config', JSON.stringify(state.timeLimit));
+      checkTimeAndStatus();
+    }
+
+    function saveTimeConfigBtn() {
+      updateTimeConfig();
+      showToast('⏰ 訂餐時段設定已儲存生效！');
+    }
+
+    function toggleManualOverride() {
+      const open = isCurrentlyOpen();
+      if (open) {
+        state.manualOverride = 'closed';
+        showToast('🔒 管理員已手動結單！');
+      } else {
+        state.manualOverride = 'open';
+        showToast('🔓 管理員已手動開放點餐！');
+      }
+      sSet('moodfood_manual_override', state.manualOverride);
+      checkTimeAndStatus();
     }
 
     function changeSelectedDay(dayVal) {
@@ -931,9 +1755,6 @@
       alert(successMsg);
     }
 
-    /**************************************************************
-     * 後台統計與匯出
-     **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
       renderAdminDashboard();
