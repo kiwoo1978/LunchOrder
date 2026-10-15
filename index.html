@@ -123,7 +123,7 @@
           </div>
         </div>
 
-        <!-- 當日特選與例湯看板 -->
+        <!-- 常態當日特選與例湯看板 -->
         <div id="regularSpecialBannerSection" class="mt-4 pt-3 border-t border-gray-200">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
@@ -693,335 +693,64 @@
 
   <script>
     /**************************************************************
-     * 資料修復與向下相容邏輯
+     * 點餐與互動邏輯
      **************************************************************/
-    function getAllMenuItemsMap() {
-      const map = {};
-      if (state.emergency && state.emergency.enabled) {
-        map['em_custom'] = { id: 'em_custom', name: state.emergency.name, price: state.emergency.price };
-        return map;
-      }
-      const bentoList = (state.fixedMenu && state.fixedMenu.bento) ? state.fixedMenu.bento : DEFAULT_FIXED_MENU.bento;
-      const alaList = (state.fixedMenu && state.fixedMenu.alacarte) ? state.fixedMenu.alacarte : DEFAULT_FIXED_MENU.alacarte;
-      const dsList = (state.fixedMenu && state.fixedMenu.drinkSoup) ? state.fixedMenu.drinkSoup : DEFAULT_FIXED_MENU.drinkSoup;
-
-      [...bentoList, ...alaList, ...dsList].forEach(it => { if(it && it.id) map[it.id] = it; });
-      return map;
+    function handleNameInput(nameVal) {
+      const trimmed = nameVal.trim();
+      sSet('moodfood_user_name', trimmed);
+      const hint = document.getElementById('savedNameHint');
+      if (hint) hint.classList.toggle('hidden', !trimmed);
+      checkUserOrderHistory(trimmed);
+      renderAll();
     }
 
-    function renderAll() {
-      renderHeaderAndBanner();
-      renderMenuLists();
-      renderCartBar();
-      renderPublicOrders();
-      renderAdminDashboard();
-      renderWeeklyEditForm();
-      renderSpecialRosterBox();
-      renderFixedMenuEditor();
-    }
+    function checkUserOrderHistory(name) {
+      const hintBox = document.getElementById('userOrderHistoryHint');
+      if (!hintBox) return null;
+      if (!name) {
+        hintBox.classList.add('hidden');
+        return null;
+      }
 
-    function getDayInfo() {
-      if (!state.weeklyMenu) state.weeklyMenu = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_MENU));
-      return state.weeklyMenu[state.selectedDay] || DEFAULT_WEEKLY_MENU[1];
-    }
-
-    function getDisplayItemName(item) {
-      if (!item) return '';
-      if (item.id === 'em_custom') return item.name;
-      const dayInfo = getDayInfo();
-      if (item.isSpecial) return `今日特選飯(${dayInfo.special})`;
-      if (item.isSoup) return `每日例湯(${dayInfo.soup})`;
-      return item.name;
-    }
-
-    function renderHeaderAndBanner() {
-      const dayInfo = getDayInfo();
-      const stats = getSpecialBentoStats();
-
-      const headerInfo = document.getElementById('headerDateInfo');
-      if (headerInfo) {
-        if (dayInfo.isOff) {
-          headerInfo.textContent = `🛑 本日店家公休不供餐 (${dayInfo.dateStr} ${dayInfo.dayLabel})`;
-        } else if (state.emergency.enabled) {
-          headerInfo.textContent = `⚠️ 今日特殊供餐模式：${state.emergency.name} ($${state.emergency.price})`;
-        } else {
-          headerInfo.textContent = `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
+      const existingOrder = (state.orders || []).find(o => o.name === name);
+      if (existingOrder) {
+        let paidMsg = '';
+        if (existingOrder.paidAmount > 0 || existingOrder.paid) {
+          const paidNum = existingOrder.paidAmount || existingOrder.total;
+          paidMsg = `（先前已付款 $${paidNum}）`;
         }
-      }
-      
-      const bannerSpecial = document.getElementById('bannerSpecialName');
-      if (bannerSpecial) bannerSpecial.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.special;
-      const bannerSoup = document.getElementById('bannerSoupName');
-      if (bannerSoup) bannerSoup.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.soup;
-
-      const tagRemain = document.getElementById('bannerSpecialRemainTag');
-      const btnAddSpecial = document.getElementById('btnQuickAddSpecial');
-      const hintBento = document.getElementById('specialBentoStockHint');
-
-      if (dayInfo.isOff) {
-        if (tagRemain) {
-          tagRemain.textContent = '本日公休';
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-gray-600 text-white';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = true;
-          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
-        }
-        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">🛑 本日公休，全天不開放點餐</span>`;
-      } else if (stats.isSoldOut) {
-        if (tagRemain) {
-          tagRemain.textContent = '今日特餐已售完';
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-red-600 text-white';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = true;
-          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
-        }
-        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完</span>`;
-      } else {
-        if (tagRemain) {
-          tagRemain.textContent = `剩餘 ${stats.remaining} 份`;
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = false;
-          btnAddSpecial.className = 'bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer';
-        }
-        if (hintBento) hintBento.innerHTML = `配額 ${stats.quota} 份 (尚餘 <b class="text-white">${stats.remaining}</b> 份)`;
-      }
-
-      const soupContainer = document.getElementById('bannerSoupContainer');
-      if (soupContainer) {
-        soupContainer.classList.toggle('hidden', state.seasonMode !== 'soup' || dayInfo.isOff);
-      }
-
-      const selectEl = document.getElementById('daySelect');
-      if (selectEl) {
-        Array.from(selectEl.options).forEach(opt => {
-          const d = state.weeklyMenu[opt.value];
-          if (d) {
-            opt.textContent = `${d.dateStr} (${d.dayLabel}) ${d.isOff ? '[公休不供餐]' : `- 特選：${d.special}`}`;
-          }
-        });
-      }
-
-      const overviewGrid = document.getElementById('weeklyOverviewGrid');
-      if (overviewGrid) {
-        overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
-          const d = state.weeklyMenu[k];
-          const isCurrent = Number(k) === Number(state.selectedDay);
-          return `
-            <div class="p-2.5 rounded-lg border ${d.isOff ? 'bg-gray-200 border-gray-400 opacity-80' : isCurrent ? 'bg-amber-100 border-amber-500 font-bold' : 'bg-gray-50 border-gray-200'}">
-              <div class="text-emerald-900 font-bold">${d.dateStr} (${d.dayLabel})</div>
-              ${d.isOff ? '<div class="text-red-700 font-bold mt-1.5">🛑 公休休息</div>' : `
-                <div class="text-amber-900 mt-1">🍱 ${d.special}</div>
-                <div class="text-emerald-800 mt-0.5">🥣 ${d.soup}</div>
-              `}
-            </div>
-          `;
-        }).join('');
-      }
-
-      if (state.weeklyImageBase64) {
-        const previewFront = document.getElementById('weeklyImagePreviewFront');
-        if (previewFront) previewFront.classList.remove('hidden');
-        const frontImg = document.getElementById('frontMenuImg');
-        if (frontImg) frontImg.src = state.weeklyImageBase64;
-        const adminPreviewArea = document.getElementById('adminImagePreviewArea');
-        if (adminPreviewArea) adminPreviewArea.classList.remove('hidden');
-        const adminImg = document.getElementById('adminPreviewImg');
-        if (adminImg) adminImg.src = state.weeklyImageBase64;
-      }
-    }
-
-    function renderMenuCard(item) {
-      if (!item) return '';
-      const qty = state.currentCart[item.id] || 0;
-      const displayName = getDisplayItemName(item);
-      const isSpecial = item.id === 'b1';
-      const stats = getSpecialBentoStats();
-      const isSoldOut = isSpecial && (stats.remaining - qty <= 0);
-
-      let tagHtml = '';
-      if (item.tag) {
-        tagHtml = `<span class="${item.tagType || 'bg-gray-700'} text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">${item.tag}</span>`;
-      }
-      if (isSpecial) {
-        tagHtml = stats.isSoldOut 
-          ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">已售完</span>`
-          : `<span class="bg-amber-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">剩 ${stats.remaining} 份</span>`;
-      }
-
-      const noteHtml = item.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${item.note}</p>` : '';
-
-      return `
-        <div class="flex items-center justify-between p-3 rounded-xl border transition ${qty > 0 ? 'border-emerald-700 bg-emerald-50/40 shadow-sm' : 'border-gray-200 bg-white'}">
-          <div class="pr-2">
-            <div class="flex items-center flex-wrap">
-              ${tagHtml}
-              <span class="font-bold text-gray-800 ${isSoldOut && qty === 0 ? 'line-through text-gray-400' : ''}">${displayName}</span>
-            </div>
-            ${noteHtml}
-            <p class="text-emerald-800 font-bold mt-1">$${item.price}</p>
-          </div>
-          <div class="flex items-center space-x-2 shrink-0">
-            <button type="button" onclick="updateCartQty('${item.id}', -1)" 
-              class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 cursor-pointer"
-              ${qty === 0 ? 'disabled' : ''}>
-              <i class="fa-solid fa-minus text-xs"></i>
-            </button>
-            <span class="w-6 text-center font-bold text-base ${qty > 0 ? 'text-emerald-800' : 'text-gray-400'}">${qty}</span>
-            <button type="button" onclick="updateCartQty('${item.id}', 1)" 
-              class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'mood-green text-white hover:bg-emerald-800 cursor-pointer'} flex items-center justify-center font-bold"
-              ${isSoldOut ? 'disabled title="今日特選飯已額滿"' : ''}>
-              <i class="fa-solid fa-plus text-xs"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMenuLists() {
-      const dayInfo = getDayInfo();
-
-      if (state.emergency.enabled) {
-        const emItem = {
-          id: 'em_custom',
-          name: state.emergency.name,
-          price: state.emergency.price,
-          tag: '今日限定',
-          tagType: 'badge-limit',
-          note: '其他餐點皆暫停提供'
-        };
-        const emBox = document.getElementById('emergencyMenuItemBox');
-        if (emBox) emBox.innerHTML = renderMenuCard(emItem);
-      }
-
-      const bentoBox = document.getElementById('menuBentoList');
-      if (bentoBox) bentoBox.innerHTML = (state.fixedMenu.bento || []).map(renderMenuCard).join('');
-      const alacarteBox = document.getElementById('menuAlaCarteList');
-      if (alacarteBox) alacarteBox.innerHTML = (state.fixedMenu.alacarte || []).map(renderMenuCard).join('');
-
-      const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
-      const backupSection = document.getElementById('specialBackupSection');
-      if (backupSection) {
-        backupSection.classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled || (dayInfo && dayInfo.isOff));
-        if (hasSpecialInCart) {
-          handleBackupChange(state.selectedBackupItem);
-        } else {
-          state.selectedBackupItem = '';
-          const sel = document.getElementById('specialBackupSelect');
-          if (sel) sel.value = '';
-        }
-      }
-
-      const seasonalSec = document.getElementById('seasonalSection');
-      const sectionTitle = document.getElementById('drinkSoupSectionTitle');
-      const seasonHint = document.getElementById('drinkSoupSeasonHint');
-      const drinkSoupContainer = document.getElementById('menuDrinkSoupList');
-
-      if (seasonalSec && sectionTitle && seasonHint && drinkSoupContainer) {
-        if (state.seasonMode === 'none' || (dayInfo && dayInfo.isOff)) {
-          seasonalSec.classList.add('hidden');
-        } else {
-          seasonalSec.classList.remove('hidden');
-          if (state.seasonMode === 'soup') {
-            sectionTitle.innerHTML = `例湯專區 <span class="text-xs font-normal opacity-80 ml-2">SOUP</span>`;
-            seasonHint.textContent = `冬季限定 (10月~4月)`;
-            const soupItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSoup);
-            drinkSoupContainer.innerHTML = soupItems.map(renderMenuCard).join('');
-          } else if (state.seasonMode === 'drink') {
-            sectionTitle.innerHTML = `飲品專區 <span class="text-xs font-normal opacity-80 ml-2">DRINKS</span>`;
-            seasonHint.textContent = `夏季限定 (5月~9月)`;
-            const drinkItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSummerDrink);
-            drinkSoupContainer.innerHTML = drinkItems.map(renderMenuCard).join('');
-          }
-        }
-      }
-    }
-
-    function renderCartBar() {
-      const itemMap = getAllMenuItemsMap();
-      let totalQty = 0;
-      let totalPrice = 0;
-      let names = [];
-
-      Object.keys(state.currentCart).forEach(id => {
-        const q = state.currentCart[id];
-        if (q > 0 && itemMap[id]) {
-          totalQty += q;
-          totalPrice += q * itemMap[id].price;
-          names.push(`${getDisplayItemName(itemMap[id])} x${q}`);
-        }
-      });
-
-      const totalQtyEl = document.getElementById('cartTotalQty');
-      if (totalQtyEl) totalQtyEl.textContent = totalQty;
-      const totalPriceEl = document.getElementById('cartTotalPrice');
-      if (totalPriceEl) totalPriceEl.textContent = `$${totalPrice}`;
-      const itemsPreview = document.getElementById('cartItemsPreview');
-      if (itemsPreview) itemsPreview.textContent = names.length > 0 ? names.join('、') : '尚未選擇餐點';
-
-      const curName = (document.getElementById('userNameInput')?.value || '').trim();
-      const existing = (state.orders || []).find(o => o.name === curName);
-      const diffBadge = document.getElementById('cartDiffHintBadge');
-
-      if (diffBadge) {
-        if (existing && (existing.paid || existing.paidAmount > 0) && totalQty > 0) {
-          const paidAmount = existing.paidAmount || existing.total;
-          const diff = totalPrice - paidAmount;
-          diffBadge.classList.remove('hidden');
-          if (diff > 0) {
-            diffBadge.textContent = `需補差額 +$${diff}`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-300';
-          } else if (diff < 0) {
-            diffBadge.textContent = `需退差額 -$${Math.abs(diff)}`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
-          } else {
-            diffBadge.textContent = `已付清無需補差額`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-700';
-          }
-        } else {
-          diffBadge.classList.add('hidden');
-        }
-      }
-    }
-
-    function renderPublicOrders() {
-      const countEl = document.getElementById('publicOrderCount');
-      if (countEl) countEl.textContent = state.orders.length;
-      const navCount = document.getElementById('navOrderCount');
-      if (navCount) navCount.textContent = state.orders.length;
-
-      const listEl = document.getElementById('publicOrderList');
-      if (!listEl) return;
-      if (state.orders.length === 0) {
-        listEl.innerHTML = `<p class="text-gray-400 text-center py-3">今日尚無訂單</p>`;
-        return;
-      }
-
-      listEl.innerHTML = state.orders.map(o => {
-        let diffHtml = '';
-        if (o.diff !== undefined && o.diff !== 0) {
-          diffHtml = o.diff > 0 
-            ? `<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold ml-1">需補+$${o.diff}</span>`
-            : `<span class="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold ml-1">退款$${Math.abs(o.diff)}</span>`;
-        }
-        let backupHtml = o.backupItem ? `<span class="text-xs text-amber-800 ml-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">備案:改${o.backupItem.name}</span>` : '';
-
-        return `
-          <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
-              <span class="text-gray-600">${o.itemsSummary}</span>
-              ${backupHtml}
-              ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
-              ${diffHtml}
-            </div>
-            <div class="font-bold text-emerald-800">$${o.total}</div>
+        hintBox.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span>📋 您已訂購過：<b>${escapeHtml(existingOrder.itemsSummary)}</b> ($${existingOrder.total}) ${paidMsg}</span>
+            <span class="text-[11px] underline cursor-pointer text-blue-700 font-bold" onclick="loadUserOrderToCart('${escapeHtml(name)}')">載入此單修改</span>
           </div>
         `;
-      }).join('');
+        hintBox.classList.remove('hidden');
+        return existingOrder;
+      } else {
+        hintBox.classList.add('hidden');
+        return null;
+      }
+    }
+
+    function loadUserOrderToCart(name) {
+      const order = state.orders.find(o => o.name === name);
+      if (!order) return;
+      state.currentCart = {};
+      (order.detailedItems || []).forEach(it => {
+        state.currentCart[it.id] = it.qty;
+      });
+      const noteInput = document.getElementById('orderNoteInput');
+      if (noteInput) noteInput.value = order.note || '';
+      if (order.backupItem) {
+        state.selectedBackupItem = order.backupItem.id;
+        const backupSelect = document.getElementById('specialBackupSelect');
+        if (backupSelect) backupSelect.value = order.backupItem.id;
+      } else {
+        state.selectedBackupItem = '';
+      }
+      renderAll();
+      showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
     }
 
     function changeSelectedDay(dayVal) {
@@ -1203,7 +932,7 @@
     }
 
     /**************************************************************
-     * 後台訂單統計與匯出
+     * 後台統計與匯出
      **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
