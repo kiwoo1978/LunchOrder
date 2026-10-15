@@ -101,11 +101,13 @@
             <div class="relative">
               <input type="text" id="userNameInput" placeholder="請輸入您的姓名 (例如：蔡俊辰)" 
                 class="w-full border-2 border-emerald-800/30 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-800 font-medium"
-                oninput="saveUserName(this.value)">
+                oninput="handleNameInput(this.value)">
               <span id="savedNameHint" class="hidden absolute right-3 top-2.5 text-xs text-emerald-600 font-medium">
                 <i class="fa-solid fa-check-circle"></i> 已記憶
               </span>
             </div>
+            <!-- 已訂購紀錄與差額提示條 -->
+            <div id="userOrderHistoryHint" class="hidden mt-1 text-xs p-1.5 rounded bg-blue-50 text-blue-900 border border-blue-200"></div>
           </div>
 
           <div id="daySelectWrapper">
@@ -126,7 +128,6 @@
         <!-- 常態當日特選與例湯看板 (突發模式隱藏) -->
         <div id="regularSpecialBannerSection" class="mt-4 pt-3 border-t border-gray-200">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <!-- 今日特選飯看板 -->
             <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
               <div>
                 <div class="flex items-center space-x-1.5">
@@ -140,7 +141,6 @@
               </button>
             </div>
 
-            <!-- 每日例湯看板 (若開放例湯才顯示) -->
             <div id="bannerSoupContainer" class="bg-emerald-50/90 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
               <div>
                 <span class="text-xs font-bold px-2 py-0.5 rounded mood-green text-white">每日例湯 $40</span>
@@ -198,6 +198,21 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
         </section>
 
+        <!-- 🌟 特選飯售完備案選擇區 (僅當購物車有點特選飯時彈出) -->
+        <section id="specialBackupSection" class="hidden mood-card rounded-xl p-4 border-2 border-amber-500 bg-amber-50/50 space-y-2">
+          <div class="flex items-center space-x-2 text-amber-950 font-bold text-sm">
+            <i class="fa-solid fa-arrows-rotate text-amber-700"></i>
+            <span>特選備用選項：若「今日特選飯」提前額滿售完，您要改訂什麼？</span>
+          </div>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            因今日特選飯每日僅限量 5 份[cite: 1, 2]，若店家回報特選已完售，管理員將依您指定的備案餐點替換（括號內為替換後的差額）：
+          </p>
+          <select id="specialBackupSelect" onchange="handleBackupChange(this.value)" class="w-full border-2 border-amber-600 rounded-lg p-2.5 bg-white font-bold text-sm text-gray-800 focus:outline-none">
+            <!-- 動態生成選項 -->
+          </select>
+          <p id="backupDiffHint" class="text-xs font-bold text-amber-800"></p>
+        </section>
+
         <!-- 菜單：單點 -->
         <section>
           <div class="mood-brown text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
@@ -206,7 +221,7 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="menuAlaCarteList"></div>
         </section>
 
-        <!-- 菜單：季節供應區 (由管理員後台設定切換例湯或飲品) -->
+        <!-- 菜單：季節供應區 -->
         <section id="seasonalSection">
           <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest" id="drinkSoupSectionTitle">例湯 / 飲品專區</h2>
@@ -291,15 +306,15 @@
           <span class="font-bold text-gray-700"><i class="fa-solid fa-filter mr-1"></i>匯出名單模式：</span>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="all" checked onchange="changeExportMode('all')" class="text-emerald-700">
-            <span>全部列出 (標註已付/未付)</span>
+            <span>全部列出 (含付款與差額)</span>
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="unpaidOnly" onchange="changeExportMode('unpaidOnly')" class="text-emerald-700">
-            <span class="text-red-700 font-bold">僅列未付款同仁 (催繳用)</span>
+            <span class="text-red-700 font-bold">僅列未付與待補差額 (催繳用)</span>
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
-            <span class="text-emerald-800 font-bold">僅列已付款同仁</span>
+            <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
         </div>
 
@@ -331,7 +346,7 @@
     <!-- ==================== 後台 2：供餐規則與菜單設定 (預設 hidden) ==================== -->
     <div id="viewWeekly" class="hidden space-y-6">
       
-      <!-- 突發狀況與全域開放設定 -->
+      <!-- 突發狀況設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-red-500/30">
         <div class="flex justify-between items-center border-b pb-2">
           <h2 class="text-xl font-bold text-red-900 flex items-center">
@@ -340,7 +355,6 @@
           <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">緊急應變控制</span>
         </div>
 
-        <!-- 1. 今日開放總開關 -->
         <div class="bg-red-50/50 p-4 rounded-xl border border-red-200 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <div>
             <h4 class="font-bold text-sm text-gray-900">1. 今日是否開放訂餐？(最高權限開關)</h4>
@@ -356,7 +370,6 @@
           </div>
         </div>
 
-        <!-- 2. 突發單一便當模式 -->
         <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-300 space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -390,7 +403,7 @@
         </div>
       </div>
 
-      <!-- 🍲 / 🍹 季節性模式設定 (例湯 vs 飲品) -->
+      <!-- 季節性模式設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-3">
         <div class="flex justify-between items-center border-b pb-2">
           <h2 class="text-xl font-bold mood-green-text flex items-center">
@@ -474,24 +487,29 @@
         </div>
       </div>
 
-      <!-- 常態菜單照片與 AI 辨識設定 -->
+      <!-- 🌟 全域共享 Gemini API Key 設定 (跨裝置免重複輸入) -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
           <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>常態菜單設定 (當週特選照片 ＆ AI辨識)
         </h2>
 
-        <div class="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3.5">
+        <div class="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3.5 space-y-2">
           <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div>
               <label class="text-xs font-bold text-emerald-950">
-                <i class="fa-solid fa-key mr-1"></i>Google Gemini API Key (圖片 AI 自動辨識)
+                <i class="fa-solid fa-key mr-1 text-emerald-700"></i>全域共享 Google Gemini API Key
               </label>
-              <p class="text-xs text-gray-500">金鑰僅安全儲存在瀏覽器本機端。</p>
+              <p class="text-xs text-gray-500">只需輸入一次並儲存，其他管理員的手機或電腦即可直接共用此金鑰，無須再次輸入！</p>
             </div>
-            <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
-              onchange="saveGeminiKey(this.value)"
-              class="border border-emerald-300 rounded px-2.5 py-1.5 text-xs w-full sm:w-64 bg-white">
+            <div class="flex gap-2">
+              <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
+                class="border border-emerald-300 rounded px-2.5 py-1.5 text-xs w-full sm:w-64 bg-white">
+              <button onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0">
+                儲存金鑰
+              </button>
+            </div>
           </div>
+          <p id="apiKeyStatusHint" class="text-[11px] font-bold text-emerald-700"></p>
         </div>
 
         <div class="border-2 border-dashed border-emerald-700/40 rounded-xl p-5 text-center bg-amber-50/30">
@@ -538,7 +556,10 @@
           <div class="mood-green text-white w-10 h-10 rounded-full flex items-center justify-center font-bold" id="cartTotalQty">0</div>
           <div>
             <p class="text-xs text-gray-500" id="cartItemsPreview">尚未選擇任何餐點</p>
-            <p class="text-lg font-bold mood-green-text">應付總計：<span class="text-red-600 text-xl" id="cartTotalPrice">$0</span></p>
+            <div class="flex items-baseline space-x-2">
+              <p class="text-lg font-bold mood-green-text">應付總計：<span class="text-red-600 text-xl" id="cartTotalPrice">$0</span></p>
+              <span id="cartDiffHintBadge" class="hidden text-xs px-2 py-0.5 rounded-full font-bold"></span>
+            </div>
           </div>
         </div>
         <button onclick="resetCurrentSelection()" class="text-xs text-gray-400 hover:text-red-600 underline sm:ml-4">清空重選</button>
@@ -636,6 +657,7 @@
       weeklyImageBase64: '',
       orders: [],
       currentCart: {},
+      selectedBackupItem: 'b2', // 預設備案：醬燒雞腿飯
       isTodayOpen: true,
       timeLimit: {
         enabled: true,
@@ -650,8 +672,8 @@
         price: 150,
         notice: '今日因特殊狀況，常態餐點暫停供應，僅提供特製客製化便當！'
       },
-      // 季節品項模式：'soup'(僅例湯) | 'drink'(僅夏季飲品) | 'none'(皆關閉)
-      seasonMode: isSummerMonth ? 'drink' : 'soup'
+      seasonMode: isSummerMonth ? 'drink' : 'soup',
+      globalGeminiApiKey: ''
     };
 
     function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -692,10 +714,15 @@
       const localSeasonMode = sGet('moodfood_season_mode');
       if (localSeasonMode) state.seasonMode = localSeasonMode;
 
-      const savedKey = sGet('moodfood_gemini_key');
-      if (savedKey) document.getElementById('geminiApiKeyInput').value = savedKey;
+      // 載入全域共用 API Key
+      const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
+      if (savedKey) {
+        state.globalGeminiApiKey = savedKey;
+        document.getElementById('geminiApiKeyInput').value = savedKey;
+        document.getElementById('apiKeyStatusHint').textContent = '✅ 已設定共用金鑰，所有管理員裝置皆可直接使用圖片辨識！';
+      }
 
-      // 初始化表單
+      // 初始化表單控制項
       document.getElementById('timeLimitEnabled').checked = state.timeLimit.enabled;
       document.getElementById('startTimeInput').value = state.timeLimit.startTime;
       document.getElementById('endTimeInput').value = state.timeLimit.endTime;
@@ -709,6 +736,7 @@
         `💡 目前月份為 ${curMonth} 月 (${isSummerMonth ? '夏季期間建議開放飲品' : '冬季期間建議開放例湯'})`;
 
       renderSeasonRadioUI();
+      renderBackupSelectOptions();
       updateEmergencyUI();
       updateTodayOpenBtnUI();
 
@@ -718,14 +746,13 @@
     });
 
     /**************************************************************
-     * 特選飯「限量 5 份」核心計算
+     * 1. 今日特選限額與備案管理
      **************************************************************/
     function getSpecialBentoStats() {
       const currentUserName = (document.getElementById('userNameInput')?.value || '').trim();
       let orderedCount = 0;
 
       state.orders.forEach(o => {
-        // 若該訂單屬於當前使用者，不計入其他人的佔用扣打 (允許他在自身名額內修改)
         if (o.name !== currentUserName) {
           (o.detailedItems || []).forEach(it => {
             if (it.id === 'b1') orderedCount += it.qty;
@@ -737,8 +764,101 @@
       return { orderedCount, remaining, isSoldOut: remaining <= 0 };
     }
 
+    function renderBackupSelectOptions() {
+      const sel = document.getElementById('specialBackupSelect');
+      if (!sel) return;
+      // 備案選項：除了今日特選以外的其他常規餐盒
+      const backupCandidates = FIXED_MENU.bento.filter(b => b.id !== 'b1');
+      sel.innerHTML = backupCandidates.map(b => {
+        const diff = b.price - 90;
+        const diffText = diff > 0 ? `(需補 +$${diff})` : diff < 0 ? `(需退 -$${Math.abs(diff)})` : `(金額同為 $90)`;
+        return `<option value="${b.id}" ${b.id === state.selectedBackupItem ? 'selected' : ''}>${b.name} $${b.price} ${diffText}</option>`;
+      }).join('');
+    }
+
+    function handleBackupChange(val) {
+      state.selectedBackupItem = val;
+      const target = FIXED_MENU.bento.find(b => b.id === val);
+      if (target) {
+        const diff = target.price - 90;
+        const hintEl = document.getElementById('backupDiffHint');
+        if (diff > 0) hintEl.textContent = `💡 若替換為「${target.name}」，結單時每份將補差額 +$${diff} 元。`;
+        else if (diff < 0) hintEl.textContent = `💡 若替換為「${target.name}」，結單時每份將退還差額 -$${Math.abs(diff)} 元。`;
+        else hintEl.textContent = `💡 金額相同，不需補差額。`;
+      }
+    }
+
     /**************************************************************
-     * 開放狀態判斷核心邏輯
+     * 2. 同仁原訂單查詢與補差額計算
+     **************************************************************/
+    function handleNameInput(nameVal) {
+      const trimmed = nameVal.trim();
+      sSet('moodfood_user_name', trimmed);
+      document.getElementById('savedNameHint').classList.toggle('hidden', !trimmed);
+      checkUserOrderHistory(trimmed);
+      renderAll();
+    }
+
+    function checkUserOrderHistory(name) {
+      const hintBox = document.getElementById('userOrderHistoryHint');
+      if (!name) {
+        hintBox.classList.add('hidden');
+        return null;
+      }
+
+      const existingOrder = state.orders.find(o => o.name === name);
+      if (existingOrder) {
+        let paidMsg = '';
+        if (existingOrder.paidAmount > 0 || existingOrder.paid) {
+          const paidNum = existingOrder.paidAmount || existingOrder.total;
+          paidMsg = `（先前已付款 $${paidNum}）`;
+        }
+        hintBox.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span>📋 您已訂購過：<b>${escapeHtml(existingOrder.itemsSummary)}</b> ($${existingOrder.total}) ${paidMsg}</span>
+            <span class="text-[11px] underline cursor-pointer text-blue-700" onclick="loadUserOrderToCart('${escapeHtml(name)}')">載入此單修改</span>
+          </div>
+        `;
+        hintBox.classList.remove('hidden');
+        return existingOrder;
+      } else {
+        hintBox.classList.add('hidden');
+        return null;
+      }
+    }
+
+    function loadUserOrderToCart(name) {
+      const order = state.orders.find(o => o.name === name);
+      if (!order) return;
+      state.currentCart = {};
+      (order.detailedItems || []).forEach(it => {
+        state.currentCart[it.id] = it.qty;
+      });
+      document.getElementById('orderNoteInput').value = order.note || '';
+      if (order.backupItem) {
+        state.selectedBackupItem = order.backupItem.id;
+        document.getElementById('specialBackupSelect').value = order.backupItem.id;
+      }
+      renderAll();
+      showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
+    }
+
+    /**************************************************************
+     * 3. 全域共享 API Key 管理
+     **************************************************************/
+    function saveGeminiKeyAction() {
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      state.globalGeminiApiKey = key;
+      sSet('moodfood_shared_gemini_key', key);
+      sSet('moodfood_gemini_key', key);
+      document.getElementById('apiKeyStatusHint').textContent = key 
+        ? '✅ 已成功儲存共用金鑰！其他裝置登入後台即可直接使用。' 
+        : '⚠️ 已清空共用金鑰。';
+      showToast('🔑 共用 Gemini API Key 已儲存生效！');
+    }
+
+    /**************************************************************
+     * 開放狀態判斷邏輯
      **************************************************************/
     function isCurrentlyOpen() {
       if (!state.isTodayOpen) return false;
@@ -815,13 +935,12 @@
         const stats = getSpecialBentoStats();
         let txt = `今日：${state.isTodayOpen ? '開放' : '暫停'} ｜ 狀態：${open ? '開放中' : '已鎖定'}`;
         txt += ` ｜ 特選飯已訂：${5 - stats.remaining}/5 份`;
-        txt += ` ｜ 季節品項：${state.seasonMode === 'soup' ? '每日例湯' : state.seasonMode === 'drink' ? '夏季飲品' : '皆關閉'}`;
         hint.textContent = txt;
       }
     }
 
     /**************************************************************
-     * 後台控制開關
+     * 後台緊急與季節控制
      **************************************************************/
     function setTodaySystemOpen(openStatus) {
       state.isTodayOpen = openStatus;
@@ -879,7 +998,6 @@
       document.getElementById('regularSpecialBannerSection').classList.toggle('hidden', isEm);
     }
 
-    // 季節品項 Radio UI 渲染與切換
     function handleSeasonChange(val) {
       state.seasonMode = val;
       renderSeasonRadioUI();
@@ -901,16 +1019,12 @@
 
     function saveSeasonSettingBtn() {
       sSet('moodfood_season_mode', state.seasonMode);
-      // 清空購物車中已不供應的品項
       if (state.seasonMode === 'soup') {
-        delete state.currentCart['d2'];
-        delete state.currentCart['d3'];
+        delete state.currentCart['d2']; delete state.currentCart['d3'];
       } else if (state.seasonMode === 'drink') {
         delete state.currentCart['d1'];
       } else {
-        delete state.currentCart['d1'];
-        delete state.currentCart['d2'];
-        delete state.currentCart['d3'];
+        delete state.currentCart['d1']; delete state.currentCart['d2']; delete state.currentCart['d3'];
       }
       renderAll();
       showToast(state.seasonMode === 'soup' ? '🥣 已設定為【冬季限定：僅開放每日例湯】' : state.seasonMode === 'drink' ? '🍹 已設定為【夏季限定：僅開放冷飲】' : '❄️ 已設定為【例湯與飲品皆關閉】');
@@ -980,7 +1094,6 @@
       document.getElementById('bannerSpecialName').textContent = dayInfo.special;
       document.getElementById('bannerSoupName').textContent = dayInfo.soup;
 
-      // 更新特選剩餘份數標籤
       const tagRemain = document.getElementById('bannerSpecialRemainTag');
       const btnAddSpecial = document.getElementById('btnQuickAddSpecial');
       const hintBento = document.getElementById('specialBentoStockHint');
@@ -1003,7 +1116,6 @@
         if (hintBento) hintBento.innerHTML = `限量 5 份 (尚餘 <b class="text-white">${stats.remaining}</b> 份)`;
       }
 
-      // 控制頂部例湯看板 (若未開放例湯則隱藏)
       const soupContainer = document.getElementById('bannerSoupContainer');
       if (soupContainer) {
         soupContainer.classList.toggle('hidden', state.seasonMode !== 'soup');
@@ -1083,7 +1195,6 @@
     }
 
     function renderMenuLists() {
-      // 突發模式卡片
       if (state.emergency.enabled) {
         const emItem = {
           id: 'em_custom',
@@ -1096,11 +1207,15 @@
         document.getElementById('emergencyMenuItemBox').innerHTML = renderMenuCard(emItem);
       }
 
-      // 常規菜單
       document.getElementById('menuBentoList').innerHTML = FIXED_MENU.bento.map(renderMenuCard).join('');
       document.getElementById('menuAlaCarteList').innerHTML = FIXED_MENU.alacarte.map(renderMenuCard).join('');
 
-      // 🍲 / 🍹 季節性品項渲染 (依後台設定切換)
+      // 特選飯備案卡片顯隱
+      const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
+      document.getElementById('specialBackupSection').classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled);
+      if (hasSpecialInCart) handleBackupChange(state.selectedBackupItem);
+
+      // 季節性品項渲染
       const seasonalSec = document.getElementById('seasonalSection');
       const sectionTitle = document.getElementById('drinkSoupSectionTitle');
       const seasonHint = document.getElementById('drinkSoupSeasonHint');
@@ -1152,6 +1267,29 @@
       document.getElementById('cartTotalQty').textContent = totalQty;
       document.getElementById('cartTotalPrice').textContent = `$${totalPrice}`;
       document.getElementById('cartItemsPreview').textContent = names.length > 0 ? names.join('、') : '尚未選擇餐點';
+
+      // 檢查差額 (對照原訂單已付款)
+      const curName = (document.getElementById('userNameInput')?.value || '').trim();
+      const existing = state.orders.find(o => o.name === curName);
+      const diffBadge = document.getElementById('cartDiffHintBadge');
+
+      if (existing && (existing.paid || existing.paidAmount > 0) && totalQty > 0) {
+        const paidAmount = existing.paidAmount || existing.total;
+        const diff = totalPrice - paidAmount;
+        diffBadge.classList.remove('hidden');
+        if (diff > 0) {
+          diffBadge.textContent = `需補差額 +$${diff}`;
+          diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-300';
+        } else if (diff < 0) {
+          diffBadge.textContent = `需退差額 -$${Math.abs(diff)}`;
+          diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+        } else {
+          diffBadge.textContent = `已付清無需補差額`;
+          diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-700';
+        }
+      } else {
+        diffBadge.classList.add('hidden');
+      }
     }
 
     function renderPublicOrders() {
@@ -1164,23 +1302,28 @@
         return;
       }
 
-      listEl.innerHTML = state.orders.map(o => `
-        <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-          <div class="flex items-center space-x-2">
-            <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
-            <span class="text-gray-600">${o.itemsSummary}</span>
-            ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
-          </div>
-          <div class="font-bold text-emerald-800">$${o.total}</div>
-        </div>
-      `).join('');
-    }
+      listEl.innerHTML = state.orders.map(o => {
+        let diffHtml = '';
+        if (o.diff !== undefined && o.diff !== 0) {
+          diffHtml = o.diff > 0 
+            ? `<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold ml-1">需補+$${o.diff}</span>`
+            : `<span class="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold ml-1">退款$${Math.abs(o.diff)}</span>`;
+        }
+        let backupHtml = o.backupItem ? `<span class="text-xs text-amber-800 ml-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">備案:改${o.backupItem.name}</span>` : '';
 
-    function saveUserName(val) {
-      sSet('moodfood_user_name', val.trim());
-      document.getElementById('savedNameHint').classList.toggle('hidden', !val.trim());
-      // 使用者變更時重新計算名額
-      renderAll();
+        return `
+          <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
+              <span class="text-gray-600">${o.itemsSummary}</span>
+              ${backupHtml}
+              ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
+              ${diffHtml}
+            </div>
+            <div class="font-bold text-emerald-800">$${o.total}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function changeSelectedDay(dayVal) {
@@ -1198,7 +1341,6 @@
         return;
       }
 
-      // 🚨 特選飯 5 份限額即時檢查
       if (itemId === 'b1' && delta > 0) {
         const stats = getSpecialBentoStats();
         const currentInCart = state.currentCart['b1'] || 0;
@@ -1241,12 +1383,11 @@
         return;
       }
 
-      // 🚨 送出前最終嚴格核對特選飯限額 (防止同仁同時下單撞單)
       const specialQtyInCart = state.currentCart['b1'] || 0;
       if (specialQtyInCart > 0) {
         const stats = getSpecialBentoStats();
         if (specialQtyInCart > stats.remaining) {
-          alert('⚠️ 抱歉！剛剛「今日特選飯」已被其他同仁搶先訂購，目前名額已滿 5 份！\n請點擊確定後更換其他餐點再重新送出。');
+          alert('⚠️ 抱歉！剛剛「今日特選飯」已被其他同仁搶先訂購，目前名額已滿 5 份！\n請更換其他餐點再重新送出。');
           delete state.currentCart['b1'];
           renderAll();
           return;
@@ -1279,6 +1420,36 @@
       const note = document.getElementById('orderNoteInput').value.trim();
       const dayInfo = getDayInfo();
 
+      // 取得特選備案資訊
+      let backupItemInfo = null;
+      if (specialQtyInCart > 0) {
+        const backupTarget = FIXED_MENU.bento.find(b => b.id === state.selectedBackupItem);
+        if (backupTarget) {
+          backupItemInfo = {
+            id: backupTarget.id,
+            name: backupTarget.name,
+            price: backupTarget.price,
+            diff: backupTarget.price - 90
+          };
+        }
+      }
+
+      // 檢查是否為改單 & 計算差額
+      const existingIdx = state.orders.findIndex(o => o.name === userName);
+      let paidStatus = false;
+      let paidAmount = 0;
+      let diff = 0;
+
+      if (existingIdx >= 0) {
+        const old = state.orders[existingIdx];
+        if (old.paid || (old.paidAmount && old.paidAmount > 0)) {
+          paidAmount = old.paidAmount || old.total;
+          diff = totalAmount - paidAmount;
+          // 若金額增加，標記尚未結清差額；若金額相等或減少，則維持已付
+          paidStatus = (diff <= 0);
+        }
+      }
+
       const newOrder = {
         id: 'ord_' + Date.now(),
         name: userName,
@@ -1287,14 +1458,15 @@
         note,
         total: totalAmount,
         qty: totalQty,
-        paid: false,
+        paid: paidStatus,
+        paidAmount: paidAmount, // 歷史已付款紀錄
+        diff: diff,             // 需補或需退差額
+        backupItem: backupItemInfo,
         dateLabel: state.emergency.enabled ? '突發限定供餐' : `${dayInfo.dateStr}(${dayInfo.dayLabel})`,
         time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
       };
 
-      const existingIdx = state.orders.findIndex(o => o.name === userName);
       if (existingIdx >= 0) {
-        newOrder.paid = state.orders[existingIdx].paid;
         state.orders[existingIdx] = newOrder;
       } else {
         state.orders.push(newOrder);
@@ -1303,11 +1475,18 @@
       resetCurrentSelection();
       sSet('moodfood_orders', JSON.stringify(state.orders));
       renderAll();
-      showToast(`🎉 「${userName}」點餐成功！共 $${totalAmount}`);
+
+      let successMsg = `🎉 「${userName}」點餐成功！共 $${totalAmount}`;
+      if (paidAmount > 0) {
+        if (diff > 0) successMsg += `\n⚠️ 您先前已繳 $${paidAmount}，改單後【需補差額 +$${diff}】！`;
+        else if (diff < 0) successMsg += `\n💡 您先前已繳 $${paidAmount}，改單後【管理員需退您 -$${Math.abs(diff)}】！`;
+        else successMsg += `\n✅ 金額與原單相同，已結清！`;
+      }
+      alert(successMsg);
     }
 
     /**************************************************************
-     * 後台訂單統計與匯出
+     * 後台訂單統計與匯出 (含差額計算)
      **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
@@ -1321,18 +1500,22 @@
       let totalItems = 0;
       let totalAmount = 0;
       let paidCount = 0;
-      let paidAmount = 0;
-      let unpaidAmount = 0;
+      let totalPaidReceived = 0;
+      let totalPendingToCollect = 0;
       const itemSummaryMap = {};
 
       state.orders.forEach(o => {
         totalItems += o.qty;
         totalAmount += o.total;
-        if (o.paid) {
+
+        // 計算收款與待收
+        const alreadyPaid = o.paidAmount || (o.paid ? o.total : 0);
+        totalPaidReceived += alreadyPaid;
+        const pending = Math.max(0, o.total - alreadyPaid);
+        totalPendingToCollect += pending;
+
+        if (o.paid && (!o.diff || o.diff <= 0)) {
           paidCount++;
-          paidAmount += o.total;
-        } else {
-          unpaidAmount += o.total;
         }
 
         (o.detailedItems || []).forEach(it => {
@@ -1348,9 +1531,10 @@
 
       const progressEl = document.getElementById('paymentProgressText');
       if (progressEl) {
-        progressEl.innerHTML = `收款進度：<b class="text-emerald-700">${paidCount}/${totalPeople}</b> 人 (已收 $${paidAmount} / <span class="text-red-600">待收 $${unpaidAmount}</span>)`;
+        progressEl.innerHTML = `收款進度：<b class="text-emerald-700">${paidCount}/${totalPeople}</b> 人 (已收 $${totalPaidReceived} / <span class="text-red-600">待收 $${totalPendingToCollect}</span>)`;
       }
 
+      // 給店家品項統計
       const itemSummaryEl = document.getElementById('adminItemSummaryList');
       const itemKeys = Object.keys(itemSummaryMap);
       if (itemKeys.length === 0) {
@@ -1367,41 +1551,64 @@
         `).join('');
       }
 
+      // 同仁收款明細 (含差額提示)
       const personListEl = document.getElementById('adminPersonOrderList');
       if (state.orders.length === 0) {
         personListEl.innerHTML = `<p class="text-gray-400 py-2">尚無同仁下單</p>`;
       } else {
-        personListEl.innerHTML = state.orders.map((o, idx) => `
-          <div class="p-3 rounded-lg border transition ${o.paid ? 'bg-emerald-50/70 border-emerald-300' : 'bg-white border-gray-200'} flex justify-between items-center gap-2">
-            <div class="flex items-start space-x-3">
-              <input type="checkbox" id="chk_paid_${idx}" ${o.paid ? 'checked' : ''} onchange="toggleOrderPaid(${idx}, this.checked)"
-                class="w-5 h-5 mt-1 text-emerald-700 rounded cursor-pointer">
-              <div>
-                <label for="chk_paid_${idx}" class="cursor-pointer">
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-base text-gray-900">${escapeHtml(o.name)}</span>
-                    <span class="text-xs ${o.paid ? 'bg-emerald-600 text-white' : 'bg-red-100 text-red-700'} font-bold px-2 py-0.5 rounded-full">
-                      ${o.paid ? '已付' : '未付'}
-                    </span>
-                    <span class="text-xs text-gray-400">${o.time}</span>
-                  </div>
-                  <p class="text-gray-700 mt-0.5 text-xs sm:text-sm">${escapeHtml(o.itemsSummary)}</p>
-                  ${o.note ? `<p class="text-xs text-amber-800 mt-0.5">備註：${escapeHtml(o.note)}</p>` : ''}
-                </label>
+        personListEl.innerHTML = state.orders.map((o, idx) => {
+          const hasDiff = (o.diff !== undefined && o.diff !== 0);
+          let statusBadge = '';
+          if (o.paid && !hasDiff) {
+            statusBadge = `<span class="text-xs bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">已付清</span>`;
+          } else if (hasDiff && o.diff > 0) {
+            statusBadge = `<span class="text-xs bg-red-600 text-white font-bold px-2 py-0.5 rounded-full">待補差額 $${o.diff}</span>`;
+          } else if (hasDiff && o.diff < 0) {
+            statusBadge = `<span class="text-xs bg-amber-600 text-white font-bold px-2 py-0.5 rounded-full">待退款 $${Math.abs(o.diff)}</span>`;
+          } else {
+            statusBadge = `<span class="text-xs bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full">未付款</span>`;
+          }
+
+          let backupText = o.backupItem ? `<p class="text-xs text-amber-900 mt-0.5">🔄 <b>售完備案：</b>改訂 ${o.backupItem.name} (${o.backupItem.diff >= 0 ? `+` : ``}${o.backupItem.diff}元)</p>` : '';
+          let diffDetailText = '';
+          if (o.paidAmount > 0) {
+            diffDetailText = `<p class="text-xs text-blue-800 mt-0.5">💰 先前已繳 $${o.paidAmount} ➡️ 目前應補收 $${Math.max(0, o.total - o.paidAmount)}</p>`;
+          }
+
+          return `
+            <div class="p-3 rounded-lg border transition ${o.paid && (!o.diff || o.diff <= 0) ? 'bg-emerald-50/70 border-emerald-300' : 'bg-white border-gray-200'} flex justify-between items-center gap-2">
+              <div class="flex items-start space-x-3">
+                <input type="checkbox" id="chk_paid_${idx}" ${o.paid ? 'checked' : ''} onchange="toggleOrderPaid(${idx}, this.checked)"
+                  class="w-5 h-5 mt-1 text-emerald-700 rounded cursor-pointer">
+                <div>
+                  <label for="chk_paid_${idx}" class="cursor-pointer">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold text-base text-gray-900">${escapeHtml(o.name)}</span>
+                      ${statusBadge}
+                      <span class="text-xs text-gray-400">${o.time}</span>
+                    </div>
+                    <p class="text-gray-700 mt-0.5 text-xs sm:text-sm">${escapeHtml(o.itemsSummary)}</p>
+                    ${backupText}
+                    ${diffDetailText}
+                    ${o.note ? `<p class="text-xs text-amber-800 mt-0.5">備註：${escapeHtml(o.note)}</p>` : ''}
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2 shrink-0">
+                <div class="text-right">
+                  <span class="font-bold text-base ${o.paid ? 'text-emerald-800' : 'text-red-600'}">$${o.total}</span>
+                </div>
+                <button onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5" title="刪除">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
               </div>
             </div>
-
-            <div class="flex items-center space-x-2 shrink-0">
-              <span class="font-bold text-base ${o.paid ? 'text-emerald-800' : 'text-red-600'}">$${o.total}</span>
-              <button onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5" title="刪除">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
-      // 匯出排版
+      // 結單匯出文字排版
       const dayInfo = getDayInfo();
       let exportLines = [];
       exportLines.push(`🍱 【牧饗手作食研 - 訂便當結單統計】`);
@@ -1423,36 +1630,47 @@
       exportLines.push(`----------------------------------------`);
 
       if (state.exportFilterMode === 'all') {
-        exportLines.push(`💰 【同仁訂購與收款明細】（共 ${totalPeople} 人，已收 $${paidAmount} / 待收 $${unpaidAmount}）`);
+        exportLines.push(`💰 【同仁訂購與收款明細】（共 ${totalPeople} 人，已收 $${totalPaidReceived} / 待收 $${totalPendingToCollect}）`);
         state.orders.forEach((o, i) => {
-          const statusTag = o.paid ? ' [已付款✅]' : ' [未付款❌]';
-          exportLines.push(`${i + 1}. ${o.name}：${o.itemsSummary}${o.note ? ` (${o.note})` : ''} ➡️ 應收 $${o.total}${statusTag}`);
+          let tag = o.paid ? '[已結清✅]' : '[未付款❌]';
+          if (o.diff > 0) tag = `[需補差額+$${o.diff}⚠️]`;
+          if (o.diff < 0) tag = `[待退款-$${Math.abs(o.diff)}💡]`;
+
+          let backupTxt = o.backupItem ? ` (備案:${o.backupItem.name})` : '';
+          let noteTxt = o.note ? ` (備註:${o.note})` : '';
+          exportLines.push(`${i + 1}. ${o.name}：${o.itemsSummary}${backupTxt}${noteTxt} ➡️ 應收 $${o.total} ${tag}`);
         });
 
-        const unpaids = state.orders.filter(o => !o.paid);
-        if (unpaids.length > 0) {
-          exportLines.push(`\n⚠️ 尚未付款同仁 (${unpaids.length}人)：${unpaids.map(u => `${u.name}($${u.total})`).join('、')}，請記得繳費喔！`);
+        const pendingList = state.orders.filter(o => !o.paid || (o.diff && o.diff > 0));
+        if (pendingList.length > 0) {
+          exportLines.push(`\n⚠️ 尚有費用/差額待收同仁：`);
+          pendingList.forEach(p => {
+            const need = p.diff > 0 ? p.diff : (p.total - (p.paidAmount || 0));
+            exportLines.push(`▫️ ${p.name}：需繳 $${need}`);
+          });
         } else if (state.orders.length > 0) {
-          exportLines.push(`\n🎉 全數同仁已繳費完畢！感謝配合！`);
+          exportLines.push(`\n🎉 全員皆已完成繳費結清！感謝配合！`);
         }
 
       } else if (state.exportFilterMode === 'unpaidOnly') {
-        const unpaids = state.orders.filter(o => !o.paid);
-        exportLines.push(`🚨 【尚未繳費同仁名單】（共 ${unpaids.length} 人 ｜ 待收金額：$${unpaidAmount}）`);
+        const unpaids = state.orders.filter(o => !o.paid || (o.diff && o.diff > 0));
+        exportLines.push(`🚨 【待繳費 / 待補差額名單】（共 ${unpaids.length} 人 ｜ 待收總計：$${totalPendingToCollect}）`);
         if (unpaids.length === 0) {
           exportLines.push(`🎉 太棒了！全員皆已完成繳費！`);
         } else {
           unpaids.forEach((o, i) => {
-            exportLines.push(`${i + 1}. ${o.name}：應收 $${o.total} (${o.itemsSummary})`);
+            const need = o.diff > 0 ? o.diff : (o.total - (o.paidAmount || 0));
+            const reason = o.diff > 0 ? `(改單補差額)` : `(訂餐費用)`;
+            exportLines.push(`${i + 1}. ${o.name}：需繳 $${need} ${reason} ➡️ ${o.itemsSummary}`);
           });
-          exportLines.push(`\n📢 請以上同仁有空時記得將費用繳交給管理員，謝謝！`);
+          exportLines.push(`\n📢 請以上同仁有空時記得將款項繳交給管理員，謝謝！`);
         }
 
       } else if (state.exportFilterMode === 'paidOnly') {
-        const paids = state.orders.filter(o => o.paid);
-        exportLines.push(`✅ 【已完成繳費同仁名單】（共 ${paids.length} 人 ｜ 已收金額：$${paidAmount}）`);
+        const paids = state.orders.filter(o => o.paid && (!o.diff || o.diff <= 0));
+        exportLines.push(`✅ 【已結清同仁名單】（共 ${paids.length} 人）`);
         if (paids.length === 0) {
-          exportLines.push(`(尚未有同仁繳費)`);
+          exportLines.push(`(尚未有同仁結清)`);
         } else {
           paids.forEach((o, i) => {
             exportLines.push(`${i + 1}. ${o.name}：已收 $${o.total} (${o.itemsSummary})`);
@@ -1466,9 +1684,16 @@
     function toggleOrderPaid(idx, isChecked) {
       if (!state.orders[idx]) return;
       state.orders[idx].paid = isChecked;
+      if (isChecked) {
+        state.orders[idx].paidAmount = state.orders[idx].total;
+        state.orders[idx].diff = 0;
+      } else {
+        state.orders[idx].paidAmount = 0;
+        state.orders[idx].diff = 0;
+      }
       sSet('moodfood_orders', JSON.stringify(state.orders));
       renderAdminDashboard();
-      showToast(isChecked ? `✅ 已標記「${state.orders[idx].name}」已付款` : `已取消「${state.orders[idx].name}」付款狀態`);
+      showToast(isChecked ? `✅ 已標記「${state.orders[idx].name}」已繳清全額` : `已取消「${state.orders[idx].name}」繳費狀態`);
     }
 
     function deleteSingleOrder(idx) {
@@ -1493,7 +1718,7 @@
     }
 
     /**************************************************************
-     * 管理員身分與分頁切換
+     * 管理員分頁與照片 AI 辨識
      **************************************************************/
     function toggleAdminModal() {
       if (state.isAdmin) {
@@ -1582,11 +1807,6 @@
       showToast('✅ 常態菜單設定已儲存！');
     }
 
-    function saveGeminiKey(val) {
-      sSet('moodfood_gemini_key', val.trim());
-      showToast('已儲存 Gemini API Key');
-    }
-
     function handleWeeklyImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1623,8 +1843,8 @@
 
     async function parseMenuImageWithAI() {
       if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
-      const apiKey = document.getElementById('geminiApiKeyInput').value.trim();
-      if (!apiKey) return alert('請先填入 Gemini API Key！');
+      const apiKey = state.globalGeminiApiKey || document.getElementById('geminiApiKeyInput').value.trim();
+      if (!apiKey) return alert('請先填入並儲存共用 Gemini API Key！');
 
       const statusEl = document.getElementById('aiParseStatus');
       const btn = document.getElementById('btnAiParse');
