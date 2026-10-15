@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>牧饗手作食研 - 訂便當系統</title>
+  <!-- 引入 Tailwind CSS 與 FontAwesome 圖示 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -22,7 +23,7 @@
     .badge-new { background-color: #234233; }
   </style>
 </head>
-<body class="min-h-screen pb-32">
+<body class="min-h-screen pb-28">
 
   <!-- 頂部導覽列 -->
   <header class="mood-green text-white shadow-md sticky top-0 z-30">
@@ -38,26 +39,26 @@
         <span id="orderStatusBadge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500 text-white">
           檢查中...
         </span>
-        <button type="button" onclick="toggleAdminModal()" id="adminBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1 cursor-pointer">
+        <button onclick="toggleAdminModal()" id="adminBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
           <i class="fa-solid fa-user-shield"></i>
           <span id="adminBtnText">管理員登入</span>
         </button>
       </div>
     </div>
 
-    <!-- 管理員切換分頁列 (預設隱藏) -->
+    <!-- 管理員切換分頁列 -->
     <div id="adminNavTabs" class="hidden bg-emerald-950/80 border-t border-emerald-800">
       <div class="max-w-4xl mx-auto px-4 flex space-x-1 py-1.5">
-        <button type="button" onclick="switchView('order')" id="tabOrder" class="flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow cursor-pointer">
+        <button onclick="switchView('order')" id="tabOrder" class="flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow">
           <i class="fa-solid fa-utensils mr-1"></i> 我要點餐 (前台)
         </button>
-        <button type="button" onclick="switchView('dashboard')" id="tabDashboard" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10 cursor-pointer">
+        <button onclick="switchView('dashboard')" id="tabDashboard" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10">
           <i class="fa-solid fa-clipboard-list mr-1"></i> 訂單統計與匯出 (<span id="navOrderCount">0</span>)
         </button>
-        <button type="button" onclick="switchView('weekly')" id="tabWeekly" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10 cursor-pointer">
+        <button onclick="switchView('weekly')" id="tabWeekly" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10">
           <i class="fa-solid fa-sliders mr-1"></i> 供餐規則與菜單設定
         </button>
-        <button type="button" onclick="logoutAdmin()" class="px-3 py-1.5 text-sm font-medium rounded text-red-300 hover:bg-red-900/40 cursor-pointer" title="登出管理員">
+        <button onclick="logoutAdmin()" class="px-3 py-1.5 text-sm font-medium rounded text-red-300 hover:bg-red-900/40" title="登出管理員">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
@@ -123,7 +124,7 @@
           </div>
         </div>
 
-        <!-- 當日特選與例湯看板 -->
+        <!-- 常態當日特選與例湯看板 -->
         <div id="regularSpecialBannerSection" class="mt-4 pt-3 border-t border-gray-200">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
@@ -134,7 +135,7 @@
                 </div>
                 <p class="text-lg font-bold text-amber-950 mt-1" id="bannerSpecialName">載入中...</p>
               </div>
-              <button type="button" onclick="quickAddSpecial()" id="btnQuickAddSpecial" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer">
+              <button onclick="quickAddSpecial()" id="btnQuickAddSpecial" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
                 +1 點選
               </button>
             </div>
@@ -144,14 +145,14 @@
                 <span class="text-xs font-bold px-2 py-0.5 rounded mood-green text-white">每日例湯 $40</span>
                 <p class="text-lg font-bold text-emerald-950 mt-1" id="bannerSoupName">載入中...</p>
               </div>
-              <button type="button" onclick="quickAddSoup()" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer">
+              <button onclick="quickAddSoup()" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
                 +1 點選
               </button>
             </div>
           </div>
 
           <div class="mt-3 text-right">
-            <button type="button" onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium cursor-pointer">
+            <button onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium">
               <i class="fa-regular fa-calendar-check mr-1"></i>展開查看「本週特選與例湯一覽表」
             </button>
           </div>
@@ -165,7 +166,7 @@
         </div>
       </div>
 
-      <!-- 結單 / 公休提示橫幅 -->
+      <!-- 結單橫幅 -->
       <div id="closedAlertBanner" class="hidden bg-red-100 border-l-4 border-red-600 text-red-800 p-4 rounded-r-xl shadow-sm">
         <div class="flex items-center">
           <i class="fa-solid fa-lock text-xl mr-3"></i>
@@ -187,6 +188,7 @@
 
       <!-- 常態菜單容器 -->
       <div id="regularMenuContainer" class="space-y-6">
+        <!-- 菜單：餐盒 -->
         <section>
           <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest">餐盒 <span class="text-xs font-normal opacity-80 ml-2">BENTO BOX</span></h2>
@@ -195,7 +197,7 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
         </section>
 
-        <!-- 特選備案選擇區 -->
+        <!-- 特選備案選擇區 (僅當點選今日特選飯時出現，預設未選) -->
         <section id="specialBackupSection" class="hidden mood-card rounded-xl p-4 border-2 border-amber-500 bg-amber-50/50 space-y-2">
           <div class="flex items-center space-x-2 text-amber-950 font-bold text-sm">
             <i class="fa-solid fa-arrows-rotate text-amber-700"></i>
@@ -209,7 +211,7 @@
           <p id="backupDiffHint" class="text-xs font-bold text-amber-800"></p>
         </section>
 
-        <!-- 單點 -->
+        <!-- 菜單：單點 -->
         <section>
           <div class="mood-brown text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest">單點 <span class="text-xs font-normal opacity-90 ml-2">A LA CARTE</span></h2>
@@ -217,7 +219,7 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="menuAlaCarteList"></div>
         </section>
 
-        <!-- 季節專區 -->
+        <!-- 菜單：季節專區 -->
         <section id="seasonalSection">
           <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest" id="drinkSoupSectionTitle">例湯 / 飲品專區</h2>
@@ -249,7 +251,7 @@
 
     </div>
 
-    <!-- ==================== 後台 1：訂單管理與備案轉單 (預設 hidden) ==================== -->
+    <!-- ==================== 後台 1：訂單管理與備案轉單 ==================== -->
     <div id="viewDashboard" class="hidden space-y-6">
       
       <div class="mood-card rounded-xl p-5 shadow-sm">
@@ -259,10 +261,10 @@
             <p class="text-xs text-gray-500 mt-0.5" id="adminCurrentStatusHint">載入狀態中...</p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button type="button" onclick="toggleManualOverride()" id="btnManualOverride" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer">
+            <button onclick="toggleManualOverride()" id="btnManualOverride" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition">
               切換狀態
             </button>
-            <button type="button" onclick="clearAllOrders()" class="px-4 py-2 rounded-lg text-sm font-bold text-red-700 bg-red-100 hover:bg-red-200 transition cursor-pointer">
+            <button onclick="clearAllOrders()" class="px-4 py-2 rounded-lg text-sm font-bold text-red-700 bg-red-100 hover:bg-red-200 transition">
               <i class="fa-solid fa-trash-can mr-1"></i> 清空今日所有訂單
             </button>
           </div>
@@ -291,10 +293,10 @@
             <h3 class="font-bold text-amber-950 flex items-center">
               <i class="fa-solid fa-boxes-packing mr-2 text-amber-700"></i>今日特餐廠商配額調整 ＆ 備案替換工作台
             </h3>
-            <p class="text-xs text-gray-600">若廠商告知特餐缺料、售完或配額減少，可在此直接調整並替換同仁餐點：</p>
+            <p class="text-xs text-gray-600">若廠商告知特餐缺料、售完或配額減少（如 5 個改為 2 個），可在此直接調整並替換同仁餐點：</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <button type="button" onclick="setSpecialQuota(0)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button onclick="setSpecialQuota(0)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
               宣告全數售完 (配額改0)
             </button>
           </div>
@@ -303,8 +305,8 @@
         <div class="flex flex-wrap items-center gap-3 text-xs pt-1">
           <span class="font-bold text-gray-700">今日特餐實際供應上限：</span>
           <input type="number" id="inputSpecialQuota" min="0" max="20" class="w-16 border rounded px-2 py-1 text-center font-bold bg-white text-sm" onchange="changeSpecialQuota(this.value)">
-          <span class="text-gray-500">份 (調低後超過順位的同仁會自動標記需轉備案)</span>
-          <button type="button" onclick="changeSpecialQuota(document.getElementById('inputSpecialQuota').value)" class="bg-emerald-800 text-white px-3 py-1 rounded font-bold cursor-pointer">
+          <span class="text-gray-500">份 (預設5份，調低後超過順位的同仁會自動標記需轉備案)</span>
+          <button onclick="changeSpecialQuota(document.getElementById('inputSpecialQuota').value)" class="bg-emerald-800 text-white px-3 py-1 rounded font-bold">
             更新配額
           </button>
         </div>
@@ -321,7 +323,7 @@
             </h3>
             <p class="text-xs text-gray-500">選擇匯出格式後，點擊右方按鈕即可一鍵複製文字</p>
           </div>
-          <button type="button" onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center justify-center cursor-pointer">
+          <button onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center justify-center">
             <i class="fa-regular fa-copy mr-1.5"></i> 一鍵複製文字
           </button>
         </div>
@@ -337,8 +339,8 @@
             <span class="text-red-700 font-bold">僅列未付與待補差額 (催繳用)</span>
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-800 font-bold">
-            <span>僅列已結清同仁</span>
+            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
+            <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
         </div>
 
@@ -367,7 +369,7 @@
       </div>
     </div>
 
-    <!-- ==================== 後台 2：供餐規則與菜單設定 (預設 hidden) ==================== -->
+    <!-- ==================== 後台 2：供餐規則與菜單設定 ==================== -->
     <div id="viewWeekly" class="hidden space-y-6">
       
       <!-- 突發狀況設定 -->
@@ -385,10 +387,10 @@
             <p class="text-xs text-gray-500 mt-0.5">若設為「不開放」，即使在時段內同仁也無法點餐；若設為「開放」，則遵循設定時段。</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <button type="button" onclick="setTodaySystemOpen(true)" id="btnOpenSystemYes" class="px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer">
+            <button onclick="setTodaySystemOpen(true)" id="btnOpenSystemYes" class="px-4 py-2 rounded-lg font-bold text-xs transition">
               <i class="fa-solid fa-check mr-1"></i>今日開放訂餐
             </button>
-            <button type="button" onclick="setTodaySystemOpen(false)" id="btnOpenSystemNo" class="px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer">
+            <button onclick="setTodaySystemOpen(false)" id="btnOpenSystemNo" class="px-4 py-2 rounded-lg font-bold text-xs transition">
               <i class="fa-solid fa-ban mr-1"></i>今日暫停/不開放
             </button>
           </div>
@@ -419,7 +421,7 @@
               <input type="text" id="emergencyNoticeInput" value="今日因特殊狀況，常態餐盒、單點主菜與例湯暫停供應，僅提供特製客製化便當！" class="w-full border rounded-lg px-3 py-1.5 text-xs bg-white">
             </div>
             <div class="sm:col-span-2 text-right">
-              <button type="button" onclick="saveEmergencyConfig()" class="bg-amber-700 hover:bg-amber-800 text-white px-5 py-2 rounded-lg text-xs font-bold transition shadow cursor-pointer">
+              <button onclick="saveEmergencyConfig()" class="bg-amber-700 hover:bg-amber-800 text-white px-5 py-2 rounded-lg text-xs font-bold transition shadow">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存突發狀況設定並套用
               </button>
             </div>
@@ -436,7 +438,7 @@
           <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">季節切換</span>
         </div>
         <p class="text-xs text-gray-600 leading-relaxed">
-          牧饗菜單規範「每日例湯」為<b>冬季限定 (10月~4月)</b>，「現打西瓜汁與蜂蜜檸檬」為<b>夏季限定 (5月~9月)</b>。請由下方選擇目前要開放訂購的品項：
+          牧饗菜單規範「每日例湯」為<b>冬季限定 (10月~4月)</b>，「現打西瓜汁與蜂蜜檸檬」為<b>夏季限定 (5月~9月)</b>[cite: 2]。請由下方選擇目前要開放訂購的品項：
         </p>
 
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
@@ -445,7 +447,7 @@
               <input type="radio" name="seasonMode" value="soup" onchange="handleSeasonChange('soup')" class="text-emerald-700 w-4 h-4">
               <div>
                 <p class="font-bold text-sm text-gray-800">🥣 僅開放【每日例湯】</p>
-                <p class="text-[11px] text-gray-500">冬季限定 (10月~4月)，隱藏飲品</p>
+                <p class="text-[11px] text-gray-500">冬季限定 (10月~4月)[cite: 2]，隱藏飲品</p>
               </div>
             </label>
 
@@ -453,7 +455,7 @@
               <input type="radio" name="seasonMode" value="drink" onchange="handleSeasonChange('drink')" class="text-emerald-700 w-4 h-4">
               <div>
                 <p class="font-bold text-sm text-gray-800">🍹 僅開放【夏季飲品】</p>
-                <p class="text-[11px] text-gray-500">夏季限定 (5月~9月)，隱藏例湯</p>
+                <p class="text-[11px] text-gray-500">夏季限定 (5月~9月)[cite: 2]，隱藏例湯</p>
               </div>
             </label>
 
@@ -468,7 +470,7 @@
 
           <div class="flex justify-between items-center pt-2">
             <span class="text-xs text-gray-500" id="currentMonthHint">載入月份中...</span>
-            <button type="button" onclick="saveSeasonSettingBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button onclick="saveSeasonSettingBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
               儲存季節設定
             </button>
           </div>
@@ -504,7 +506,7 @@
           </div>
           <div class="text-xs text-gray-500 flex justify-between items-center">
             <span>💡 預設時段：08:30 ～ 10:30</span>
-            <button type="button" onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
               儲存時段設定
             </button>
           </div>
@@ -525,7 +527,7 @@
             <div class="flex gap-2">
               <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
                 class="border border-emerald-300 rounded px-2.5 py-1.5 text-xs w-full sm:w-64 bg-white">
-              <button type="button" onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 cursor-pointer">
+              <button onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0">
                 儲存金鑰
               </button>
             </div>
@@ -534,7 +536,7 @@
         </div>
       </div>
 
-      <!-- 常規固定餐點編輯管理 -->
+      <!-- 🌟 新增：常規固定餐點編輯管理 (餐盒、單點、飲品/例湯) -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-emerald-600/30">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-2">
           <div>
@@ -548,7 +550,7 @@
             <label for="fixedMenuImageInput" class="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow flex items-center transition">
               <i class="fa-solid fa-camera mr-1"></i> 上傳常態菜單圖 AI 辨識
             </label>
-            <button type="button" onclick="saveFixedMenuConfig()" class="mood-green hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition cursor-pointer">
+            <button onclick="saveFixedMenuConfig()" class="mood-green hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition">
               <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存菜單品項
             </button>
           </div>
@@ -556,37 +558,41 @@
 
         <p id="fixedMenuAiStatus" class="text-xs font-bold text-amber-800"></p>
 
+        <!-- 三大類別編輯表單 -->
         <div class="space-y-4">
+          <!-- 1. 餐盒編輯 -->
           <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
             <div class="flex justify-between items-center mb-2">
               <h3 class="font-bold text-sm text-emerald-950 flex items-center">
                 🍱 餐盒品項 (BENTO BOX)
               </h3>
-              <button type="button" onclick="addNewFixedMenuItem('bento')" class="text-xs text-emerald-700 hover:underline font-bold cursor-pointer">
+              <button onclick="addNewFixedMenuItem('bento')" class="text-xs text-emerald-700 hover:underline font-bold">
                 + 新增餐盒品項
               </button>
             </div>
             <div id="editBentoList" class="space-y-2"></div>
           </div>
 
+          <!-- 2. 單點編輯 -->
           <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
             <div class="flex justify-between items-center mb-2">
               <h3 class="font-bold text-sm text-amber-950 flex items-center">
                 🍖 單點品項 (A LA CARTE)
               </h3>
-              <button type="button" onclick="addNewFixedMenuItem('alacarte')" class="text-xs text-amber-700 hover:underline font-bold cursor-pointer">
+              <button onclick="addNewFixedMenuItem('alacarte')" class="text-xs text-amber-700 hover:underline font-bold">
                 + 新增單點品項
               </button>
             </div>
             <div id="editAlaCarteList" class="space-y-2"></div>
           </div>
 
+          <!-- 3. 飲品/例湯編輯 -->
           <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
             <div class="flex justify-between items-center mb-2">
               <h3 class="font-bold text-sm text-emerald-950 flex items-center">
                 🥣 飲品 / 例湯品項 (DRINKS & SOUP)
               </h3>
-              <button type="button" onclick="addNewFixedMenuItem('drinkSoup')" class="text-xs text-emerald-700 hover:underline font-bold cursor-pointer">
+              <button onclick="addNewFixedMenuItem('drinkSoup')" class="text-xs text-emerald-700 hover:underline font-bold">
                 + 新增飲品/例湯品項
               </button>
             </div>
@@ -595,10 +601,10 @@
         </div>
       </div>
 
-      <!-- 每週特選菜單照片與「公休日」設定 -->
+      <!-- 常態每週特選菜單照片與 AI 辨識設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
-          <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>一週特選、每日例湯與「公休日」設定
+          <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>一週特選與每日例湯照片設定
         </h2>
 
         <div class="border-2 border-dashed border-emerald-700/40 rounded-xl p-5 text-center bg-amber-50/30">
@@ -606,15 +612,15 @@
           <label for="weeklyImageInput" class="cursor-pointer inline-flex items-center px-4 py-2 mood-green text-white rounded-lg text-sm font-bold shadow hover:bg-emerald-800 transition">
             <i class="fa-solid fa-cloud-arrow-up mr-2"></i> 選擇當週特選菜單圖片上傳
           </label>
-          <p class="text-xs text-gray-500 mt-2">支援 AI 自動辨識菜單文字與圖片中的<b>連假公休日（如公休三天）</b>！</p>
+          <p class="text-xs text-gray-500 mt-2">上傳後將直接自動覆蓋舊特選菜單</p>
 
           <div id="adminImagePreviewArea" class="hidden mt-4">
             <img id="adminPreviewImg" src="" alt="預覽圖" class="max-h-64 mx-auto rounded-lg shadow border mb-3">
             <div class="flex justify-center space-x-2">
-              <button type="button" onclick="parseMenuImageWithAI()" id="btnAiParse" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition cursor-pointer">
-                <i class="fa-solid fa-robot mr-1"></i> AI 自動辨識圖片並填入特選、例湯與公休日
+              <button onclick="parseMenuImageWithAI()" id="btnAiParse" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition">
+                <i class="fa-solid fa-robot mr-1"></i> AI 自動辨識圖片並填入特選與例湯
               </button>
-              <button type="button" onclick="removeUploadedImage()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition cursor-pointer">
+              <button onclick="removeUploadedImage()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition">
                 移除圖片
               </button>
             </div>
@@ -624,9 +630,9 @@
 
         <div>
           <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold mood-green-text">本週特選與例湯明細設定 (可個別標記公休日)</h3>
-            <button type="button" onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
-              <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單與公休設定
+            <h3 class="font-bold mood-green-text">本週特選與例湯明細設定</h3>
+            <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition">
+              <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
             </button>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
@@ -651,10 +657,10 @@
             </div>
           </div>
         </div>
-        <button type="button" onclick="resetCurrentSelection()" class="text-xs text-gray-400 hover:text-red-600 underline sm:ml-4 cursor-pointer">清空重選</button>
+        <button onclick="resetCurrentSelection()" class="text-xs text-gray-400 hover:text-red-600 underline sm:ml-4">清空重選</button>
       </div>
 
-      <button type="button" onclick="submitOrder()" id="btnSubmitOrder" class="w-full sm:w-auto mood-green hover:bg-emerald-800 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer">
+      <button onclick="submitOrder()" id="btnSubmitOrder" class="w-full sm:w-auto mood-green hover:bg-emerald-800 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
         <i class="fa-solid fa-paper-plane"></i>
         <span>送出便當訂單</span>
       </button>
@@ -693,7 +699,7 @@
 
   <script>
     /**************************************************************
-     * 腳本與資料完整執行邏輯
+     * 常規固定菜單資料 (可由後台動態編輯與儲存)
      **************************************************************/
     const DEFAULT_FIXED_MENU = {
       bento: [
@@ -731,12 +737,12 @@
     };
 
     const DEFAULT_WEEKLY_MENU = {
-      1: { dayLabel: '星期一', dateStr: '10/12', special: '秘制鹹豬肉', soup: '味噌貢丸蛋花湯', isOff: false },
-      2: { dayLabel: '星期二', dateStr: '10/13', special: '香草烤雞腿排', soup: '香菇雞湯', isOff: false },
-      3: { dayLabel: '星期三', dateStr: '10/14', special: '沙茶羊肉', soup: '竹筍排骨湯', isOff: false },
-      4: { dayLabel: '星期四', dateStr: '10/15', special: '椒麻雞', soup: '魷魚螺肉蒜', isOff: false },
-      5: { dayLabel: '星期五', dateStr: '10/16', special: 'BBQ肩小排', soup: '薑絲肝連湯', isOff: false },
-      6: { dayLabel: '星期六', dateStr: '10/17', special: '番茄煲牛肉', soup: '剝皮辣椒雞湯', isOff: false }
+      1: { dayLabel: '星期一', dateStr: '10/12', special: '秘制鹹豬肉', soup: '味噌貢丸蛋花湯' },
+      2: { dayLabel: '星期二', dateStr: '10/13', special: '香草烤雞腿排', soup: '香菇雞湯' },
+      3: { dayLabel: '星期三', dateStr: '10/14', special: '沙茶羊肉', soup: '竹筍排骨湯' },
+      4: { dayLabel: '星期四', dateStr: '10/15', special: '椒麻雞', soup: '魷魚螺肉蒜' },
+      5: { dayLabel: '星期五', dateStr: '10/16', special: 'BBQ肩小排', soup: '薑絲肝連湯' },
+      6: { dayLabel: '星期六', dateStr: '10/17', special: '番茄煲牛肉', soup: '剝皮辣椒雞湯' }
     };
 
     const curMonth = new Date().getMonth() + 1;
@@ -752,10 +758,19 @@
       currentCart: {},
       selectedBackupItem: '',
       isTodayOpen: true,
-      timeLimit: { enabled: true, startTime: '08:30', endTime: '10:30' },
+      timeLimit: {
+        enabled: true,
+        startTime: '08:30',
+        endTime: '10:30'
+      },
       manualOverride: null,
       exportFilterMode: 'all',
-      emergency: { enabled: false, name: '牧饗客製化便當', price: 150, notice: '今日因特殊狀況，僅提供客製化便當！' },
+      emergency: {
+        enabled: false,
+        name: '牧饗客製化便當',
+        price: 150,
+        notice: '今日因特殊狀況，常態餐點暫停供應，僅提供特製客製化便當！'
+      },
       seasonMode: isSummerMonth ? 'drink' : 'soup',
       globalGeminiApiKey: '',
       specialQuotaLimit: 5
@@ -779,57 +794,30 @@
           if (hint) hint.classList.remove('hidden');
         }
 
-        try {
-          const localFixed = sGet('moodfood_fixed_menu_data');
-          if (localFixed) {
-            const parsed = JSON.parse(localFixed);
-            if (parsed && Array.isArray(parsed.bento)) state.fixedMenu.bento = parsed.bento;
-            if (parsed && Array.isArray(parsed.alacarte)) state.fixedMenu.alacarte = parsed.alacarte;
-            if (parsed && Array.isArray(parsed.drinkSoup)) state.fixedMenu.drinkSoup = parsed.drinkSoup;
-          }
-        } catch(e) {}
+        // 載入自訂常態固定菜單
+        const localFixedMenu = sGet('moodfood_fixed_menu_data');
+        if (localFixedMenu) state.fixedMenu = JSON.parse(localFixedMenu);
 
-        try {
-          const localWeekly = sGet('moodfood_weekly_menu');
-          if (localWeekly) {
-            const parsedW = JSON.parse(localWeekly);
-            Object.keys(DEFAULT_WEEKLY_MENU).forEach(k => {
-              if (parsedW && parsedW[k]) {
-                state.weeklyMenu[k] = {
-                  dayLabel: parsedW[k].dayLabel || DEFAULT_WEEKLY_MENU[k].dayLabel,
-                  dateStr: parsedW[k].dateStr || DEFAULT_WEEKLY_MENU[k].dateStr,
-                  special: parsedW[k].special || DEFAULT_WEEKLY_MENU[k].special,
-                  soup: parsedW[k].soup || DEFAULT_WEEKLY_MENU[k].soup,
-                  isOff: !!parsedW[k].isOff
-                };
-              }
-            });
-          }
-        } catch(e) {}
+        const localWeekly = sGet('moodfood_weekly_menu');
+        if (localWeekly) state.weeklyMenu = JSON.parse(localWeekly);
 
         const localImg = sGet('moodfood_weekly_img');
         if (localImg) state.weeklyImageBase64 = localImg;
 
-        try {
-          const localOrders = sGet('moodfood_orders');
-          if (localOrders) state.orders = JSON.parse(localOrders) || [];
-        } catch(e) { state.orders = []; }
+        const localOrders = sGet('moodfood_orders');
+        if (localOrders) state.orders = JSON.parse(localOrders);
 
         const localTodayOpen = sGet('moodfood_is_today_open');
         if (localTodayOpen !== null) state.isTodayOpen = JSON.parse(localTodayOpen);
 
         const localTime = sGet('moodfood_time_config');
-        if (localTime) {
-          try { state.timeLimit = JSON.parse(localTime); } catch(e){}
-        }
+        if (localTime) state.timeLimit = JSON.parse(localTime);
 
         const localOverride = sGet('moodfood_manual_override');
         if (localOverride) state.manualOverride = localOverride;
 
         const localEmergency = sGet('moodfood_emergency');
-        if (localEmergency) {
-          try { state.emergency = JSON.parse(localEmergency); } catch(e){}
-        }
+        if (localEmergency) state.emergency = JSON.parse(localEmergency);
 
         const localSeasonMode = sGet('moodfood_season_mode');
         if (localSeasonMode) state.seasonMode = localSeasonMode;
@@ -879,49 +867,335 @@
         checkTimeAndStatus();
         renderAll();
       } catch (err) {
-        console.error("Critical Load Error:", err);
+        console.error("Initialization Error:", err);
       }
     });
 
-    function getAllMenuItemsMap() {
-      const map = {};
-      if (state.emergency && state.emergency.enabled) {
-        map['em_custom'] = { id: 'em_custom', name: state.emergency.name, price: state.emergency.price };
-        return map;
-      }
-      const bentoList = (state.fixedMenu && state.fixedMenu.bento) ? state.fixedMenu.bento : DEFAULT_FIXED_MENU.bento;
-      const alaList = (state.fixedMenu && state.fixedMenu.alacarte) ? state.fixedMenu.alacarte : DEFAULT_FIXED_MENU.alacarte;
-      const dsList = (state.fixedMenu && state.fixedMenu.drinkSoup) ? state.fixedMenu.drinkSoup : DEFAULT_FIXED_MENU.drinkSoup;
-
-      [...bentoList, ...alaList, ...dsList].forEach(it => { if(it && it.id) map[it.id] = it; });
-      return map;
+    /**************************************************************
+     * Modal 控制修復
+     **************************************************************/
+    function closeAdminModal() {
+      const modal = document.getElementById('loginModal');
+      if (modal) modal.classList.add('hidden');
+      const err = document.getElementById('loginErrorMsg');
+      if (err) err.classList.add('hidden');
     }
 
-    function renderAll() {
-      renderHeaderAndBanner();
-      renderMenuLists();
-      renderCartBar();
-      renderPublicOrders();
-      renderAdminDashboard();
-      renderWeeklyEditForm();
-      renderSpecialRosterBox();
+    function handleModalBackdropClick(event) {
+      if (event.target.id === 'loginModal') {
+        closeAdminModal();
+      }
+    }
+
+    function toggleAdminModal() {
+      if (state.isAdmin) {
+        switchView('dashboard');
+        return;
+      }
+      const modal = document.getElementById('loginModal');
+      if (modal) {
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+          const uInput = document.getElementById('adminUser');
+          if (uInput) uInput.focus();
+        }
+      }
+      const err = document.getElementById('loginErrorMsg');
+      if (err) err.classList.add('hidden');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAdminModal();
+    });
+
+    function handleAdminLogin() {
+      const u = document.getElementById('adminUser')?.value.trim();
+      const p = document.getElementById('adminPass')?.value.trim();
+      if (u === 'admin' && p === 'tiac123456') {
+        state.isAdmin = true;
+        closeAdminModal();
+        document.getElementById('adminNavTabs')?.classList.remove('hidden');
+        const adminBtnText = document.getElementById('adminBtnText');
+        if (adminBtnText) adminBtnText.textContent = '管理後台';
+        switchView('dashboard');
+        showToast('🔓 管理員登入成功！');
+      } else {
+        document.getElementById('loginErrorMsg')?.classList.remove('hidden');
+      }
+    }
+
+    function logoutAdmin() {
+      state.isAdmin = false;
+      document.getElementById('adminNavTabs')?.classList.add('hidden');
+      const adminBtnText = document.getElementById('adminBtnText');
+      if (adminBtnText) adminBtnText.textContent = '管理員登入';
+      switchView('order');
+      showToast('已登出管理員');
+    }
+
+    function switchView(viewName) {
+      if (!state.isAdmin && (viewName === 'dashboard' || viewName === 'weekly')) {
+        viewName = 'order';
+      }
+
+      ['order', 'dashboard', 'weekly'].forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        const tab = document.getElementById('tab' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (v === viewName) {
+          if (el) el.classList.remove('hidden');
+          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow';
+        } else {
+          if (el) el.classList.add('hidden');
+          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10';
+        }
+      });
+      const bottomBar = document.getElementById('bottomCartBar');
+      if (bottomBar) bottomBar.classList.toggle('hidden', viewName !== 'order');
+      renderAll();
+    }
+
+    /**************************************************************
+     * 🌟 常規固定菜單編輯與 AI 辨識邏輯
+     **************************************************************/
+    function renderFixedMenuEditor() {
+      if (!state.isAdmin) return;
+      const bentoBox = document.getElementById('editBentoList');
+      const alacarteBox = document.getElementById('editAlaCarteList');
+      const drinkSoupBox = document.getElementById('editDrinkSoupList');
+
+      if (bentoBox) {
+        bentoBox.innerHTML = (state.fixedMenu.bento || []).map((item, idx) => `
+          <div class="flex items-center gap-2 bg-white p-2 rounded border text-xs">
+            <span class="w-6 text-gray-400 font-mono text-center">${idx + 1}</span>
+            <input type="text" id="bm_name_${idx}" value="${escapeHtml(item.name)}" placeholder="餐盒名稱" class="flex-1 border rounded px-2 py-1 font-bold">
+            <div class="flex items-center">
+              <span class="text-gray-500 mr-1">$</span>
+              <input type="number" id="bm_price_${idx}" value="${item.price}" placeholder="金額" class="w-16 border rounded px-1.5 py-1 text-center font-bold text-emerald-900">
+            </div>
+            <input type="text" id="bm_tag_${idx}" value="${escapeHtml(item.tag || '')}" placeholder="標籤(如:推薦)" class="w-20 border rounded px-1.5 py-1 text-center text-gray-600">
+            ${item.id === 'b1' ? '<span class="text-xs text-amber-700 font-bold px-1.5">今日特選</span>' : `
+              <button onclick="removeFixedMenuItem('bento', ${idx})" class="text-red-500 hover:text-red-700 px-1" title="刪除">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            `}
+          </div>
+        `).join('');
+      }
+
+      if (alacarteBox) {
+        alacarteBox.innerHTML = (state.fixedMenu.alacarte || []).map((item, idx) => `
+          <div class="flex items-center gap-2 bg-white p-2 rounded border text-xs">
+            <span class="w-6 text-gray-400 font-mono text-center">${idx + 1}</span>
+            <input type="text" id="am_name_${idx}" value="${escapeHtml(item.name)}" placeholder="單點名稱" class="flex-1 border rounded px-2 py-1 font-bold">
+            <div class="flex items-center">
+              <span class="text-gray-500 mr-1">$</span>
+              <input type="number" id="am_price_${idx}" value="${item.price}" placeholder="金額" class="w-16 border rounded px-1.5 py-1 text-center font-bold text-amber-900">
+            </div>
+            <button onclick="removeFixedMenuItem('alacarte', ${idx})" class="text-red-500 hover:text-red-700 px-1" title="刪除">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      if (drinkSoupBox) {
+        drinkSoupBox.innerHTML = (state.fixedMenu.drinkSoup || []).map((item, idx) => `
+          <div class="flex items-center gap-2 bg-white p-2 rounded border text-xs">
+            <span class="w-6 text-gray-400 font-mono text-center">${idx + 1}</span>
+            <input type="text" id="dm_name_${idx}" value="${escapeHtml(item.name)}" placeholder="飲品/例湯名稱" class="flex-1 border rounded px-2 py-1 font-bold">
+            <div class="flex items-center">
+              <span class="text-gray-500 mr-1">$</span>
+              <input type="number" id="dm_price_${idx}" value="${item.price}" placeholder="金額" class="w-16 border rounded px-1.5 py-1 text-center font-bold text-emerald-900">
+            </div>
+            <span class="text-gray-500 text-[11px] w-24 text-center">${item.isSoup ? '🥣 例湯' : '🍹 夏季飲品'}</span>
+            <button onclick="removeFixedMenuItem('drinkSoup', ${idx})" class="text-red-500 hover:text-red-700 px-1" title="刪除">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function addNewFixedMenuItem(category) {
+      if (category === 'bento') {
+        state.fixedMenu.bento.push({
+          id: 'b_custom_' + Date.now(),
+          name: '新餐盒',
+          price: 100,
+          tag: '',
+          tagType: ''
+        });
+      } else if (category === 'alacarte') {
+        state.fixedMenu.alacarte.push({
+          id: 'a_custom_' + Date.now(),
+          name: '新單點品項',
+          price: 70
+        });
+      } else if (category === 'drinkSoup') {
+        state.fixedMenu.drinkSoup.push({
+          id: 'd_custom_' + Date.now(),
+          name: '新飲品或湯品',
+          price: 40,
+          isSummerDrink: true
+        });
+      }
       renderFixedMenuEditor();
     }
 
-    function getDayInfo() {
-      if (!state.weeklyMenu) state.weeklyMenu = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_MENU));
-      return state.weeklyMenu[state.selectedDay] || DEFAULT_WEEKLY_MENU[1];
+    function removeFixedMenuItem(category, idx) {
+      if (category === 'bento' && state.fixedMenu.bento[idx]?.id === 'b1') {
+        alert('「今日特選飯」為系統核心品項，不可刪除！');
+        return;
+      }
+      state.fixedMenu[category].splice(idx, 1);
+      renderFixedMenuEditor();
     }
 
-    function getDisplayItemName(item) {
-      if (!item) return '';
-      if (item.id === 'em_custom') return item.name;
-      const dayInfo = getDayInfo();
-      if (item.isSpecial) return `今日特選飯(${dayInfo.special})`;
-      if (item.isSoup) return `每日例湯(${dayInfo.soup})`;
-      return item.name;
+    function saveFixedMenuConfig() {
+      // 讀取餐盒
+      (state.fixedMenu.bento || []).forEach((item, idx) => {
+        const nameEl = document.getElementById(`bm_name_${idx}`);
+        const priceEl = document.getElementById(`bm_price_${idx}`);
+        const tagEl = document.getElementById(`bm_tag_${idx}`);
+        if (nameEl) item.name = nameEl.value.trim() || item.name;
+        if (priceEl) item.price = Number(priceEl.value) || item.price;
+        if (tagEl) {
+          item.tag = tagEl.value.trim();
+          item.tagType = item.tag === '推薦' ? 'badge-rec' : item.tag === 'NEW!' ? 'badge-new' : item.tag ? 'badge-limit' : '';
+        }
+      });
+
+      // 讀取單點
+      (state.fixedMenu.alacarte || []).forEach((item, idx) => {
+        const nameEl = document.getElementById(`am_name_${idx}`);
+        const priceEl = document.getElementById(`am_price_${idx}`);
+        if (nameEl) item.name = nameEl.value.trim() || item.name;
+        if (priceEl) item.price = Number(priceEl.value) || item.price;
+      });
+
+      // 讀取飲品
+      (state.fixedMenu.drinkSoup || []).forEach((item, idx) => {
+        const nameEl = document.getElementById(`dm_name_${idx}`);
+        const priceEl = document.getElementById(`dm_price_${idx}`);
+        if (nameEl) item.name = nameEl.value.trim() || item.name;
+        if (priceEl) item.price = Number(priceEl.value) || item.price;
+      });
+
+      sSet('moodfood_fixed_menu_data', JSON.stringify(state.fixedMenu));
+      renderBackupSelectOptions();
+      renderAll();
+      showToast('✅ 常態菜單品項已更新儲存並同步至前台！');
     }
 
+    // 上傳常規菜單圖片並調用 Gemini AI 視覺解析
+    function handleFixedMenuImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const apiKey = state.globalGeminiApiKey || document.getElementById('geminiApiKeyInput')?.value.trim();
+      if (!apiKey) {
+        alert('請先在上方填入並儲存 Google Gemini API Key，才能使用 AI 照片自動辨識功能！');
+        return;
+      }
+
+      const statusEl = document.getElementById('fixedMenuAiStatus');
+      statusEl.textContent = '⏳ 正在讀取常態菜單照片並呼叫 AI 解析餐盒與單點品項，請稍候...';
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const img = new Image();
+          img.onload = async function() {
+            const canvas = document.createElement('canvas');
+            const maxDim = 1200;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const base64Content = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+            const promptText = `請辨識這張便當店常態菜單照片，擷取三個類別的餐點品項與價格：
+1. 餐盒類 (BENTO BOX): 包含品項名稱、價格、是否有標籤(例如:推薦、NEW!、限量)。請務必保留「今日特選飯」。
+2. 單點類 (A LA CARTE): 包含品項名稱、價格。
+3. 飲品/例湯類 (DRINKS & SOUP): 包含品項名稱、價格。
+
+請嚴格只回傳 JSON 格式如下：
+{
+  "bento": [
+    {"name": "今日特選飯", "price": 90, "tag": "限量"},
+    {"name": "醬燒雞腿飯", "price": 110, "tag": "推薦"}
+  ],
+  "alacarte": [
+    {"name": "醬燒雞腿(單點)", "price": 80}
+  ],
+  "drinkSoup": [
+    {"name": "每日例湯", "price": 40, "isSoup": true},
+    {"name": "新鮮現打西瓜汁", "price": 40, "isSummerDrink": true}
+  ]
+}`;
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: 'image/jpeg', data: base64Content } }] }],
+                generationConfig: { response_mime_type: "application/json" }
+              })
+            });
+
+            const result = await response.json();
+            const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+            if (parsed.bento && parsed.bento.length > 0) {
+              state.fixedMenu.bento = parsed.bento.map((b, i) => ({
+                id: i === 0 ? 'b1' : 'b_' + i + '_' + Date.now(),
+                name: b.name,
+                price: Number(b.price) || 100,
+                tag: b.tag || '',
+                tagType: b.tag === '推薦' ? 'badge-rec' : b.tag === 'NEW!' ? 'badge-new' : b.tag ? 'badge-limit' : '',
+                isSpecial: i === 0
+              }));
+            }
+            if (parsed.alacarte && parsed.alacarte.length > 0) {
+              state.fixedMenu.alacarte = parsed.alacarte.map((a, i) => ({
+                id: 'a_' + i + '_' + Date.now(),
+                name: a.name,
+                price: Number(a.price) || 70
+              }));
+            }
+            if (parsed.drinkSoup && parsed.drinkSoup.length > 0) {
+              state.fixedMenu.drinkSoup = parsed.drinkSoup.map((d, i) => ({
+                id: 'd_' + i + '_' + Date.now(),
+                name: d.name,
+                price: Number(d.price) || 40,
+                isSoup: d.isSoup || d.name.includes('湯'),
+                isSummerDrink: d.isSummerDrink || !d.name.includes('湯')
+              }));
+            }
+
+            sSet('moodfood_fixed_menu_data', JSON.stringify(state.fixedMenu));
+            renderFixedMenuEditor();
+            renderBackupSelectOptions();
+            renderAll();
+            statusEl.textContent = '🎉 AI 自動辨識菜單成功！已更新常態餐點品項表格，確認無誤可點擊儲存！';
+            showToast('✅ 常態菜單 AI 辨識載入完成！');
+          };
+          img.src = e.target.result;
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = '❌ AI 辨識失敗，請檢查 API Key 是否正確，或直接於下方欄位手動新增與修改。';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /**************************************************************
+     * 特餐配額與備案管理
+     **************************************************************/
     function getSpecialBentoStats() {
       const currentUserName = (document.getElementById('userNameInput')?.value || '').trim();
       let orderedCount = 0;
@@ -937,296 +1211,6 @@
       const quota = state.specialQuotaLimit || 5;
       const remaining = Math.max(0, quota - orderedCount);
       return { quota, orderedCount, remaining, isSoldOut: remaining <= 0 };
-    }
-
-    function renderHeaderAndBanner() {
-      const dayInfo = getDayInfo();
-      const stats = getSpecialBentoStats();
-
-      const headerInfo = document.getElementById('headerDateInfo');
-      if (headerInfo) {
-        if (dayInfo.isOff) {
-          headerInfo.textContent = `🛑 本日店家公休不供餐 (${dayInfo.dateStr} ${dayInfo.dayLabel})`;
-        } else if (state.emergency.enabled) {
-          headerInfo.textContent = `⚠️ 今日特殊供餐模式：${state.emergency.name} ($${state.emergency.price})`;
-        } else {
-          headerInfo.textContent = `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
-        }
-      }
-      
-      const bannerSpecial = document.getElementById('bannerSpecialName');
-      if (bannerSpecial) bannerSpecial.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.special;
-      const bannerSoup = document.getElementById('bannerSoupName');
-      if (bannerSoup) bannerSoup.textContent = dayInfo.isOff ? '【公休不供應】' : dayInfo.soup;
-
-      const tagRemain = document.getElementById('bannerSpecialRemainTag');
-      const btnAddSpecial = document.getElementById('btnQuickAddSpecial');
-      const hintBento = document.getElementById('specialBentoStockHint');
-
-      if (dayInfo.isOff) {
-        if (tagRemain) {
-          tagRemain.textContent = '本日公休';
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-gray-600 text-white';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = true;
-          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
-        }
-        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">🛑 本日公休，全天不開放點餐</span>`;
-      } else if (stats.isSoldOut) {
-        if (tagRemain) {
-          tagRemain.textContent = '今日特餐已售完';
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-red-600 text-white';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = true;
-          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
-        }
-        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完</span>`;
-      } else {
-        if (tagRemain) {
-          tagRemain.textContent = `剩餘 ${stats.remaining} 份`;
-          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900';
-        }
-        if (btnAddSpecial) {
-          btnAddSpecial.disabled = false;
-          btnAddSpecial.className = 'bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer';
-        }
-        if (hintBento) hintBento.innerHTML = `配額 ${stats.quota} 份 (尚餘 <b class="text-white">${stats.remaining}</b> 份)`;
-      }
-
-      const soupContainer = document.getElementById('bannerSoupContainer');
-      if (soupContainer) {
-        soupContainer.classList.toggle('hidden', state.seasonMode !== 'soup' || dayInfo.isOff);
-      }
-
-      const selectEl = document.getElementById('daySelect');
-      if (selectEl) {
-        Array.from(selectEl.options).forEach(opt => {
-          const d = state.weeklyMenu[opt.value];
-          if (d) {
-            opt.textContent = `${d.dateStr} (${d.dayLabel}) ${d.isOff ? '[公休不供餐]' : `- 特選：${d.special}`}`;
-          }
-        });
-      }
-
-      const overviewGrid = document.getElementById('weeklyOverviewGrid');
-      if (overviewGrid) {
-        overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
-          const d = state.weeklyMenu[k];
-          const isCurrent = Number(k) === Number(state.selectedDay);
-          return `
-            <div class="p-2.5 rounded-lg border ${d.isOff ? 'bg-gray-200 border-gray-400 opacity-80' : isCurrent ? 'bg-amber-100 border-amber-500 font-bold' : 'bg-gray-50 border-gray-200'}">
-              <div class="text-emerald-900 font-bold">${d.dateStr} (${d.dayLabel})</div>
-              ${d.isOff ? '<div class="text-red-700 font-bold mt-1.5">🛑 公休休息</div>' : `
-                <div class="text-amber-900 mt-1">🍱 ${d.special}</div>
-                <div class="text-emerald-800 mt-0.5">🥣 ${d.soup}</div>
-              `}
-            </div>
-          `;
-        }).join('');
-      }
-
-      if (state.weeklyImageBase64) {
-        const previewFront = document.getElementById('weeklyImagePreviewFront');
-        if (previewFront) previewFront.classList.remove('hidden');
-        const frontImg = document.getElementById('frontMenuImg');
-        if (frontImg) frontImg.src = state.weeklyImageBase64;
-        const adminPreviewArea = document.getElementById('adminImagePreviewArea');
-        if (adminPreviewArea) adminPreviewArea.classList.remove('hidden');
-        const adminImg = document.getElementById('adminPreviewImg');
-        if (adminImg) adminImg.src = state.weeklyImageBase64;
-      }
-    }
-
-    function renderMenuCard(item) {
-      if (!item) return '';
-      const qty = state.currentCart[item.id] || 0;
-      const displayName = getDisplayItemName(item);
-      const isSpecial = item.id === 'b1';
-      const stats = getSpecialBentoStats();
-      const isSoldOut = isSpecial && (stats.remaining - qty <= 0);
-
-      let tagHtml = '';
-      if (item.tag) {
-        tagHtml = `<span class="${item.tagType || 'bg-gray-700'} text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">${item.tag}</span>`;
-      }
-      if (isSpecial) {
-        tagHtml = stats.isSoldOut 
-          ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">已售完</span>`
-          : `<span class="bg-amber-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">剩 ${stats.remaining} 份</span>`;
-      }
-
-      const noteHtml = item.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${item.note}</p>` : '';
-
-      return `
-        <div class="flex items-center justify-between p-3 rounded-xl border transition ${qty > 0 ? 'border-emerald-700 bg-emerald-50/40 shadow-sm' : 'border-gray-200 bg-white'}">
-          <div class="pr-2">
-            <div class="flex items-center flex-wrap">
-              ${tagHtml}
-              <span class="font-bold text-gray-800 ${isSoldOut && qty === 0 ? 'line-through text-gray-400' : ''}">${displayName}</span>
-            </div>
-            ${noteHtml}
-            <p class="text-emerald-800 font-bold mt-1">$${item.price}</p>
-          </div>
-          <div class="flex items-center space-x-2 shrink-0">
-            <button type="button" onclick="updateCartQty('${item.id}', -1)" 
-              class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 cursor-pointer"
-              ${qty === 0 ? 'disabled' : ''}>
-              <i class="fa-solid fa-minus text-xs"></i>
-            </button>
-            <span class="w-6 text-center font-bold text-base ${qty > 0 ? 'text-emerald-800' : 'text-gray-400'}">${qty}</span>
-            <button type="button" onclick="updateCartQty('${item.id}', 1)" 
-              class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'mood-green text-white hover:bg-emerald-800 cursor-pointer'} flex items-center justify-center font-bold"
-              ${isSoldOut ? 'disabled title="今日特選飯已額滿"' : ''}>
-              <i class="fa-solid fa-plus text-xs"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMenuLists() {
-      const dayInfo = getDayInfo();
-
-      if (state.emergency.enabled) {
-        const emItem = {
-          id: 'em_custom',
-          name: state.emergency.name,
-          price: state.emergency.price,
-          tag: '今日限定',
-          tagType: 'badge-limit',
-          note: '其他餐點皆暫停提供'
-        };
-        const emBox = document.getElementById('emergencyMenuItemBox');
-        if (emBox) emBox.innerHTML = renderMenuCard(emItem);
-      }
-
-      const bentoBox = document.getElementById('menuBentoList');
-      if (bentoBox) bentoBox.innerHTML = (state.fixedMenu.bento || []).map(renderMenuCard).join('');
-      const alacarteBox = document.getElementById('menuAlaCarteList');
-      if (alacarteBox) alacarteBox.innerHTML = (state.fixedMenu.alacarte || []).map(renderMenuCard).join('');
-
-      const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
-      const backupSection = document.getElementById('specialBackupSection');
-      if (backupSection) {
-        backupSection.classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled || (dayInfo && dayInfo.isOff));
-        if (hasSpecialInCart) {
-          handleBackupChange(state.selectedBackupItem);
-        } else {
-          state.selectedBackupItem = '';
-          const sel = document.getElementById('specialBackupSelect');
-          if (sel) sel.value = '';
-        }
-      }
-
-      const seasonalSec = document.getElementById('seasonalSection');
-      const sectionTitle = document.getElementById('drinkSoupSectionTitle');
-      const seasonHint = document.getElementById('drinkSoupSeasonHint');
-      const drinkSoupContainer = document.getElementById('menuDrinkSoupList');
-
-      if (seasonalSec && sectionTitle && seasonHint && drinkSoupContainer) {
-        if (state.seasonMode === 'none' || (dayInfo && dayInfo.isOff)) {
-          seasonalSec.classList.add('hidden');
-        } else {
-          seasonalSec.classList.remove('hidden');
-          if (state.seasonMode === 'soup') {
-            sectionTitle.innerHTML = `例湯專區 <span class="text-xs font-normal opacity-80 ml-2">SOUP</span>`;
-            seasonHint.textContent = `冬季限定 (10月~4月)`;
-            const soupItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSoup);
-            drinkSoupContainer.innerHTML = soupItems.map(renderMenuCard).join('');
-          } else if (state.seasonMode === 'drink') {
-            sectionTitle.innerHTML = `飲品專區 <span class="text-xs font-normal opacity-80 ml-2">DRINKS</span>`;
-            seasonHint.textContent = `夏季限定 (5月~9月)`;
-            const drinkItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSummerDrink);
-            drinkSoupContainer.innerHTML = drinkItems.map(renderMenuCard).join('');
-          }
-        }
-      }
-    }
-
-    function renderCartBar() {
-      const itemMap = getAllMenuItemsMap();
-      let totalQty = 0;
-      let totalPrice = 0;
-      let names = [];
-
-      Object.keys(state.currentCart).forEach(id => {
-        const q = state.currentCart[id];
-        if (q > 0 && itemMap[id]) {
-          totalQty += q;
-          totalPrice += q * itemMap[id].price;
-          names.push(`${getDisplayItemName(itemMap[id])} x${q}`);
-        }
-      });
-
-      const totalQtyEl = document.getElementById('cartTotalQty');
-      if (totalQtyEl) totalQtyEl.textContent = totalQty;
-      const totalPriceEl = document.getElementById('cartTotalPrice');
-      if (totalPriceEl) totalPriceEl.textContent = `$${totalPrice}`;
-      const itemsPreview = document.getElementById('cartItemsPreview');
-      if (itemsPreview) itemsPreview.textContent = names.length > 0 ? names.join('、') : '尚未選擇餐點';
-
-      const curName = (document.getElementById('userNameInput')?.value || '').trim();
-      const existing = (state.orders || []).find(o => o.name === curName);
-      const diffBadge = document.getElementById('cartDiffHintBadge');
-
-      if (diffBadge) {
-        if (existing && (existing.paid || existing.paidAmount > 0) && totalQty > 0) {
-          const paidAmount = existing.paidAmount || existing.total;
-          const diff = totalPrice - paidAmount;
-          diffBadge.classList.remove('hidden');
-          if (diff > 0) {
-            diffBadge.textContent = `需補差額 +$${diff}`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-300';
-          } else if (diff < 0) {
-            diffBadge.textContent = `需退差額 -$${Math.abs(diff)}`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
-          } else {
-            diffBadge.textContent = `已付清無需補差額`;
-            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-700';
-          }
-        } else {
-          diffBadge.classList.add('hidden');
-        }
-      }
-    }
-
-    function renderPublicOrders() {
-      const countEl = document.getElementById('publicOrderCount');
-      if (countEl) countEl.textContent = state.orders.length;
-      const navCount = document.getElementById('navOrderCount');
-      if (navCount) navCount.textContent = state.orders.length;
-
-      const listEl = document.getElementById('publicOrderList');
-      if (!listEl) return;
-      if (state.orders.length === 0) {
-        listEl.innerHTML = `<p class="text-gray-400 text-center py-3">今日尚無訂單</p>`;
-        return;
-      }
-
-      listEl.innerHTML = state.orders.map(o => {
-        let diffHtml = '';
-        if (o.diff !== undefined && o.diff !== 0) {
-          diffHtml = o.diff > 0 
-            ? `<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold ml-1">需補+$${o.diff}</span>`
-            : `<span class="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold ml-1">退款$${Math.abs(o.diff)}</span>`;
-        }
-        let backupHtml = o.backupItem ? `<span class="text-xs text-amber-800 ml-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">備案:改${o.backupItem.name}</span>` : '';
-
-        return `
-          <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
-              <span class="text-gray-600">${o.itemsSummary}</span>
-              ${backupHtml}
-              ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
-              ${diffHtml}
-            </div>
-            <div class="font-bold text-emerald-800">$${o.total}</div>
-          </div>
-        `;
-      }).join('');
     }
 
     function renderBackupSelectOptions() {
@@ -1271,7 +1255,9 @@
       showToast(`📢 已更新今日特餐實際供應上限為：${val} 份！`);
     }
 
-    function setSpecialQuota(val) { changeSpecialQuota(val); }
+    function setSpecialQuota(val) {
+      changeSpecialQuota(val);
+    }
 
     function renderSpecialRosterBox() {
       const box = document.getElementById('specialOrderRosterBox');
@@ -1316,8 +1302,8 @@
             </div>
 
             <div class="flex items-center space-x-1.5 mt-1 sm:mt-0">
-              <button type="button" onclick="convertOrderToBackup('${escapeHtml(o.name)}')" 
-                class="px-2.5 py-1 rounded font-bold transition text-xs ${isExceeded ? 'bg-amber-600 hover:bg-amber-700 text-white shadow cursor-pointer' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer'}">
+              <button onclick="convertOrderToBackup('${escapeHtml(o.name)}')" 
+                class="px-2.5 py-1 rounded font-bold transition text-xs ${isExceeded ? 'bg-amber-600 hover:bg-amber-700 text-white shadow' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}">
                 <i class="fa-solid fa-arrows-rotate mr-1"></i>轉為備案餐點
               </button>
             </div>
@@ -1350,7 +1336,12 @@
       if (existBackupInOrder) {
         existBackupInOrder.qty += specialQty;
       } else {
-        newItems.push({ id: backupTarget.id, name: backupTarget.name, price: backupTarget.price, qty: specialQty });
+        newItems.push({
+          id: backupTarget.id,
+          name: backupTarget.name,
+          price: backupTarget.price,
+          qty: specialQty
+        });
       }
 
       let newTotal = 0;
@@ -1376,6 +1367,9 @@
       showToast(`✅ 已將「${userName}」的特餐轉為備案「${backupTarget.name}」！(差額: ${diff >= 0 ? `+$${diff}` : `-$${Math.abs(diff)}`})`);
     }
 
+    /**************************************************************
+     * 同仁原訂單查詢與補差額計算
+     **************************************************************/
     function handleNameInput(nameVal) {
       const trimmed = nameVal.trim();
       sSet('moodfood_user_name', trimmed);
@@ -1447,6 +1441,103 @@
       showToast('🔑 共用 Gemini API Key 已儲存生效！');
     }
 
+    /**************************************************************
+     * 開放狀態判斷邏輯
+     **************************************************************/
+    function isCurrentlyOpen() {
+      if (!state.isTodayOpen) return false;
+      if (state.manualOverride === 'open') return true;
+      if (state.manualOverride === 'closed') return false;
+      if (!state.timeLimit.enabled) return true;
+
+      const now = new Date();
+      const currentHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      return (currentHM >= state.timeLimit.startTime && currentHM <= state.timeLimit.endTime);
+    }
+
+    function checkTimeAndStatus() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+      const timeDisplay = document.getElementById('currentTimeDisplay');
+      if (timeDisplay) timeDisplay.textContent = `現在時間：${timeStr}`;
+
+      const open = isCurrentlyOpen();
+      const badge = document.getElementById('orderStatusBadge');
+      const closedAlert = document.getElementById('closedAlertBanner');
+      const closedTitle = document.getElementById('closedAlertTitle');
+      const closedDetail = document.getElementById('closedAlertDetail');
+      const submitBtn = document.getElementById('btnSubmitOrder');
+      const btnManual = document.getElementById('btnManualOverride');
+      const noticeText = document.getElementById('timeNoticeText');
+
+      if (noticeText) {
+        if (!state.isTodayOpen) {
+          noticeText.innerHTML = `<b class="text-red-700">【今日暫停訂餐服務】</b> (管理員已設定今日不開放)`;
+        } else if (state.manualOverride === 'open') {
+          noticeText.innerHTML = `<b class="text-amber-700">【管理員手動開放中】</b> (設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime})`;
+        } else if (state.manualOverride === 'closed') {
+          noticeText.innerHTML = `<b class="text-red-700">【管理員手動結單鎖定中】</b>`;
+        } else if (state.timeLimit.enabled) {
+          noticeText.textContent = `每日開放點餐時段：${state.timeLimit.startTime} ～ ${state.timeLimit.endTime} (逾時自動結單)`;
+        } else {
+          noticeText.textContent = `全天開放點餐中 (手動結單)`;
+        }
+      }
+
+      if (open) {
+        if (badge) {
+          badge.textContent = '開放點餐中';
+          badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500 text-white';
+        }
+        if (closedAlert) closedAlert.classList.add('hidden');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.className = 'w-full sm:w-auto mood-green hover:bg-emerald-800 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer';
+        }
+        if (btnManual) {
+          btnManual.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> 手動提前結單 (鎖定)';
+          btnManual.className = 'px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer';
+        }
+      } else {
+        if (badge) {
+          badge.textContent = !state.isTodayOpen ? '今日不開放' : '已結單鎖定';
+          badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-red-600 text-white';
+        }
+        if (closedAlert) closedAlert.classList.remove('hidden');
+
+        if (closedTitle && closedDetail) {
+          if (!state.isTodayOpen) {
+            closedTitle.textContent = '今日管理員設定暫停訂餐，暫不開放下單！';
+            closedDetail.textContent = '如有疑問請直接洽詢訂便當管理人員。';
+          } else {
+            closedTitle.textContent = '目前非訂餐開放時段，已結單鎖定！';
+            closedDetail.textContent = '如需臨時加點或修改，請洽管理員。';
+          }
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.className = 'w-full sm:w-auto bg-gray-400 cursor-not-allowed text-white font-bold px-8 py-2.5 rounded-xl flex items-center justify-center space-x-2';
+        }
+
+        if (btnManual) {
+          btnManual.innerHTML = '<i class="fa-solid fa-lock-open mr-1"></i> 強制重新開放點餐';
+          btnManual.className = 'px-4 py-2 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer';
+        }
+      }
+
+      const hint = document.getElementById('adminCurrentStatusHint');
+      if (hint) {
+        const stats = getSpecialBentoStats();
+        let txt = `今日：${state.isTodayOpen ? '開放' : '暫停'} ｜ 狀態：${open ? '開放中' : '已鎖定'}`;
+        txt += ` ｜ 特選飯已訂：${stats.quota - stats.remaining}/${stats.quota} 份`;
+        hint.textContent = txt;
+      }
+    }
+
+    /**************************************************************
+     * 後台緊急與季節控制
+     **************************************************************/
     function setTodaySystemOpen(openStatus) {
       state.isTodayOpen = openStatus;
       sSet('moodfood_is_today_open', JSON.stringify(state.isTodayOpen));
@@ -1460,11 +1551,11 @@
       const btnNo = document.getElementById('btnOpenSystemNo');
       if (btnYes && btnNo) {
         if (state.isTodayOpen) {
-          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow cursor-pointer';
-          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
         } else {
-          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
-          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow cursor-pointer';
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow';
         }
       }
     }
@@ -1577,10 +1668,316 @@
       checkTimeAndStatus();
     }
 
+    /**************************************************************
+     * 畫面渲染核心
+     **************************************************************/
+    function renderAll() {
+      renderHeaderAndBanner();
+      renderMenuLists();
+      renderCartBar();
+      renderPublicOrders();
+      renderAdminDashboard();
+      renderWeeklyEditForm();
+      renderSpecialRosterBox();
+      renderFixedMenuEditor();
+    }
+
+    function getDayInfo() {
+      return state.weeklyMenu[state.selectedDay] || DEFAULT_WEEKLY_MENU[1];
+    }
+
+    function getDisplayItemName(item) {
+      if (item.id === 'em_custom') return item.name;
+      const dayInfo = getDayInfo();
+      if (item.isSpecial) return `今日特選飯(${dayInfo.special})`;
+      if (item.isSoup) return `每日例湯(${dayInfo.soup})`;
+      return item.name;
+    }
+
+    function renderHeaderAndBanner() {
+      const dayInfo = getDayInfo();
+      const stats = getSpecialBentoStats();
+
+      const headerInfo = document.getElementById('headerDateInfo');
+      if (headerInfo) {
+        if (state.emergency.enabled) {
+          headerInfo.textContent = `⚠️ 今日特殊供餐模式：${state.emergency.name} ($${state.emergency.price})`;
+        } else {
+          headerInfo.textContent = `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
+        }
+      }
+      
+      const bannerSpecial = document.getElementById('bannerSpecialName');
+      if (bannerSpecial) bannerSpecial.textContent = dayInfo.special;
+      const bannerSoup = document.getElementById('bannerSoupName');
+      if (bannerSoup) bannerSoup.textContent = dayInfo.soup;
+
+      const tagRemain = document.getElementById('bannerSpecialRemainTag');
+      const btnAddSpecial = document.getElementById('btnQuickAddSpecial');
+      const hintBento = document.getElementById('specialBentoStockHint');
+
+      if (stats.isSoldOut) {
+        if (tagRemain) {
+          tagRemain.textContent = '今日特餐已售完';
+          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-red-600 text-white';
+        }
+        if (btnAddSpecial) {
+          btnAddSpecial.disabled = true;
+          btnAddSpecial.className = 'bg-gray-400 cursor-not-allowed text-white text-sm px-3 py-1.5 rounded-lg';
+        }
+        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完</span>`;
+      } else {
+        if (tagRemain) {
+          tagRemain.textContent = `剩餘 ${stats.remaining} 份`;
+          tagRemain.className = 'text-xs font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900';
+        }
+        if (btnAddSpecial) {
+          btnAddSpecial.disabled = false;
+          btnAddSpecial.className = 'bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer';
+        }
+        if (hintBento) hintBento.innerHTML = `配額 ${stats.quota} 份 (尚餘 <b class="text-white">${stats.remaining}</b> 份)`;
+      }
+
+      const soupContainer = document.getElementById('bannerSoupContainer');
+      if (soupContainer) {
+        soupContainer.classList.toggle('hidden', state.seasonMode !== 'soup');
+      }
+
+      const selectEl = document.getElementById('daySelect');
+      if (selectEl) {
+        Array.from(selectEl.options).forEach(opt => {
+          const d = state.weeklyMenu[opt.value];
+          if (d) opt.textContent = `${d.dateStr} (${d.dayLabel}) - 特選：${d.special}`;
+        });
+      }
+
+      const overviewGrid = document.getElementById('weeklyOverviewGrid');
+      if (overviewGrid) {
+        overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
+          const d = state.weeklyMenu[k];
+          const isCurrent = Number(k) === Number(state.selectedDay);
+          return `
+            <div class="p-2.5 rounded-lg border ${isCurrent ? 'bg-amber-100 border-amber-500 font-bold' : 'bg-gray-50 border-gray-200'}">
+              <div class="text-emerald-900 font-bold">${d.dateStr} (${d.dayLabel})</div>
+              <div class="text-amber-900 mt-1">🍱 ${d.special}</div>
+              <div class="text-emerald-800 mt-0.5">🥣 ${d.soup}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (state.weeklyImageBase64) {
+        const previewFront = document.getElementById('weeklyImagePreviewFront');
+        if (previewFront) previewFront.classList.remove('hidden');
+        const frontImg = document.getElementById('frontMenuImg');
+        if (frontImg) frontImg.src = state.weeklyImageBase64;
+        const adminPreviewArea = document.getElementById('adminImagePreviewArea');
+        if (adminPreviewArea) adminPreviewArea.classList.remove('hidden');
+        const adminImg = document.getElementById('adminPreviewImg');
+        if (adminImg) adminImg.src = state.weeklyImageBase64;
+      }
+    }
+
+    function renderMenuCard(item) {
+      const qty = state.currentCart[item.id] || 0;
+      const displayName = getDisplayItemName(item);
+      const isSpecial = item.id === 'b1';
+      const stats = getSpecialBentoStats();
+      const isSoldOut = isSpecial && (stats.remaining - qty <= 0);
+
+      let tagHtml = '';
+      if (item.tag) {
+        tagHtml = `<span class="${item.tagType || 'bg-gray-700'} text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">${item.tag}</span>`;
+      }
+      if (isSpecial) {
+        tagHtml = stats.isSoldOut 
+          ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">已售完</span>`
+          : `<span class="bg-amber-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-full mr-1.5">剩 ${stats.remaining} 份</span>`;
+      }
+
+      const noteHtml = item.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${item.note}</p>` : '';
+
+      return `
+        <div class="flex items-center justify-between p-3 rounded-xl border transition ${qty > 0 ? 'border-emerald-700 bg-emerald-50/40 shadow-sm' : 'border-gray-200 bg-white'}">
+          <div class="pr-2">
+            <div class="flex items-center flex-wrap">
+              ${tagHtml}
+              <span class="font-bold text-gray-800 ${isSoldOut && qty === 0 ? 'line-through text-gray-400' : ''}">${displayName}</span>
+            </div>
+            ${noteHtml}
+            <p class="text-emerald-800 font-bold mt-1">$${item.price}</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="updateCartQty('${item.id}', -1)" 
+              class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 cursor-pointer"
+              ${qty === 0 ? 'disabled' : ''}>
+              <i class="fa-solid fa-minus text-xs"></i>
+            </button>
+            <span class="w-6 text-center font-bold text-base ${qty > 0 ? 'text-emerald-800' : 'text-gray-400'}">${qty}</span>
+            <button onclick="updateCartQty('${item.id}', 1)" 
+              class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'mood-green text-white hover:bg-emerald-800 cursor-pointer'} flex items-center justify-center font-bold"
+              ${isSoldOut ? 'disabled title="今日特選飯已額滿"' : ''}>
+              <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMenuLists() {
+      if (state.emergency.enabled) {
+        const emItem = {
+          id: 'em_custom',
+          name: state.emergency.name,
+          price: state.emergency.price,
+          tag: '今日限定',
+          tagType: 'badge-limit',
+          note: '其他餐點皆暫停提供'
+        };
+        const emBox = document.getElementById('emergencyMenuItemBox');
+        if (emBox) emBox.innerHTML = renderMenuCard(emItem);
+      }
+
+      const bentoBox = document.getElementById('menuBentoList');
+      if (bentoBox) bentoBox.innerHTML = (state.fixedMenu.bento || []).map(renderMenuCard).join('');
+      const alacarteBox = document.getElementById('menuAlaCarteList');
+      if (alacarteBox) alacarteBox.innerHTML = (state.fixedMenu.alacarte || []).map(renderMenuCard).join('');
+
+      const hasSpecialInCart = (state.currentCart['b1'] || 0) > 0;
+      const backupSection = document.getElementById('specialBackupSection');
+      if (backupSection) {
+        backupSection.classList.toggle('hidden', !hasSpecialInCart || state.emergency.enabled);
+        if (hasSpecialInCart) {
+          handleBackupChange(state.selectedBackupItem);
+        } else {
+          state.selectedBackupItem = '';
+          const sel = document.getElementById('specialBackupSelect');
+          if (sel) sel.value = '';
+        }
+      }
+
+      const seasonalSec = document.getElementById('seasonalSection');
+      const sectionTitle = document.getElementById('drinkSoupSectionTitle');
+      const seasonHint = document.getElementById('drinkSoupSeasonHint');
+      const drinkSoupContainer = document.getElementById('menuDrinkSoupList');
+
+      if (seasonalSec && sectionTitle && seasonHint && drinkSoupContainer) {
+        if (state.seasonMode === 'none') {
+          seasonalSec.classList.add('hidden');
+        } else {
+          seasonalSec.classList.remove('hidden');
+          if (state.seasonMode === 'soup') {
+            sectionTitle.innerHTML = `例湯專區 <span class="text-xs font-normal opacity-80 ml-2">SOUP</span>`;
+            seasonHint.textContent = `冬季限定 (10月~4月)`;
+            const soupItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSoup);
+            drinkSoupContainer.innerHTML = soupItems.map(renderMenuCard).join('');
+          } else if (state.seasonMode === 'drink') {
+            sectionTitle.innerHTML = `飲品專區 <span class="text-xs font-normal opacity-80 ml-2">DRINKS</span>`;
+            seasonHint.textContent = `夏季限定 (5月~9月)`;
+            const drinkItems = (state.fixedMenu.drinkSoup || []).filter(it => it.isSummerDrink);
+            drinkSoupContainer.innerHTML = drinkItems.map(renderMenuCard).join('');
+          }
+        }
+      }
+    }
+
+    function getAllMenuItemsMap() {
+      const map = {};
+      if (state.emergency.enabled) {
+        map['em_custom'] = { id: 'em_custom', name: state.emergency.name, price: state.emergency.price };
+        return map;
+      }
+      [...(state.fixedMenu.bento || []), ...(state.fixedMenu.alacarte || []), ...(state.fixedMenu.drinkSoup || [])].forEach(it => { map[it.id] = it; });
+      return map;
+    }
+
+    function renderCartBar() {
+      const itemMap = getAllMenuItemsMap();
+      let totalQty = 0;
+      let totalPrice = 0;
+      let names = [];
+
+      Object.keys(state.currentCart).forEach(id => {
+        const q = state.currentCart[id];
+        if (q > 0 && itemMap[id]) {
+          totalQty += q;
+          totalPrice += q * itemMap[id].price;
+          names.push(`${getDisplayItemName(itemMap[id])} x${q}`);
+        }
+      });
+
+      const totalQtyEl = document.getElementById('cartTotalQty');
+      if (totalQtyEl) totalQtyEl.textContent = totalQty;
+      const totalPriceEl = document.getElementById('cartTotalPrice');
+      if (totalPriceEl) totalPriceEl.textContent = `$${totalPrice}`;
+      const itemsPreview = document.getElementById('cartItemsPreview');
+      if (itemsPreview) itemsPreview.textContent = names.length > 0 ? names.join('、') : '尚未選擇餐點';
+
+      const curName = (document.getElementById('userNameInput')?.value || '').trim();
+      const existing = (state.orders || []).find(o => o.name === curName);
+      const diffBadge = document.getElementById('cartDiffHintBadge');
+
+      if (diffBadge) {
+        if (existing && (existing.paid || existing.paidAmount > 0) && totalQty > 0) {
+          const paidAmount = existing.paidAmount || existing.total;
+          const diff = totalPrice - paidAmount;
+          diffBadge.classList.remove('hidden');
+          if (diff > 0) {
+            diffBadge.textContent = `需補差額 +$${diff}`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700 border border-red-300';
+          } else if (diff < 0) {
+            diffBadge.textContent = `需退差額 -$${Math.abs(diff)}`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+          } else {
+            diffBadge.textContent = `已付清無需補差額`;
+            diffBadge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-700';
+          }
+        } else {
+          diffBadge.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderPublicOrders() {
+      const countEl = document.getElementById('publicOrderCount');
+      if (countEl) countEl.textContent = state.orders.length;
+      const navCount = document.getElementById('navOrderCount');
+      if (navCount) navCount.textContent = state.orders.length;
+
+      const listEl = document.getElementById('publicOrderList');
+      if (!listEl) return;
+      if (state.orders.length === 0) {
+        listEl.innerHTML = `<p class="text-gray-400 text-center py-3">今日尚無訂單</p>`;
+        return;
+      }
+
+      listEl.innerHTML = state.orders.map(o => {
+        let diffHtml = '';
+        if (o.diff !== undefined && o.diff !== 0) {
+          diffHtml = o.diff > 0 
+            ? `<span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold ml-1">需補+$${o.diff}</span>`
+            : `<span class="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold ml-1">退款$${Math.abs(o.diff)}</span>`;
+        }
+        let backupHtml = o.backupItem ? `<span class="text-xs text-amber-800 ml-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">備案:改${o.backupItem.name}</span>` : '';
+
+        return `
+          <div class="flex flex-wrap justify-between items-center bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-emerald-950">${escapeHtml(o.name)}</span>
+              <span class="text-gray-600">${o.itemsSummary}</span>
+              ${backupHtml}
+              ${o.note ? `<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">備註: ${escapeHtml(o.note)}</span>` : ''}
+              ${diffHtml}
+            </div>
+            <div class="font-bold text-emerald-800">$${o.total}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function changeSelectedDay(dayVal) {
       state.selectedDay = Number(dayVal);
       renderAll();
-      checkTimeAndStatus();
     }
 
     function toggleWeeklyOverview() {
@@ -1590,8 +1987,7 @@
 
     function updateCartQty(itemId, delta) {
       if (!isCurrentlyOpen()) {
-        const dayInfo = getDayInfo();
-        showToast(dayInfo.isOff ? '🛑 本日店家公休，無法點餐！' : '⚠️ 目前非點餐開放時段！');
+        showToast('⚠️ 目前非點餐開放時段！');
         return;
       }
 
@@ -1627,12 +2023,6 @@
     }
 
     function submitOrder() {
-      const dayInfo = getDayInfo();
-      if (dayInfo && dayInfo.isOff) {
-        alert(`抱歉，店家在 ${dayInfo.dateStr} (${dayInfo.dayLabel}) 公休未供餐！請選擇其他營業日期點餐。`);
-        return;
-      }
-
       if (!isCurrentlyOpen()) {
         alert(state.isTodayOpen ? '抱歉，目前已超過開放點餐時段！' : '抱歉，今日暫停提供點餐服務！');
         return;
@@ -1692,6 +2082,7 @@
 
       const noteInput = document.getElementById('orderNoteInput');
       const note = noteInput ? noteInput.value.trim() : '';
+      const dayInfo = getDayInfo();
 
       let backupItemInfo = null;
       if (specialQtyInCart > 0 && state.selectedBackupItem) {
@@ -1755,6 +2146,9 @@
       alert(successMsg);
     }
 
+    /**************************************************************
+     * 後台訂單統計與匯出
+     **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
       renderAdminDashboard();
@@ -1869,7 +2263,7 @@
                   <div class="text-right">
                     <span class="font-bold text-base ${o.paid ? 'text-emerald-800' : 'text-red-600'}">$${o.total}</span>
                   </div>
-                  <button type="button" onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5 cursor-pointer" title="刪除">
+                  <button onclick="deleteSingleOrder(${idx})" class="text-gray-400 hover:text-red-600 px-1.5 cursor-pointer" title="刪除">
                     <i class="fa-solid fa-trash-can"></i>
                   </button>
                 </div>
@@ -1882,9 +2276,7 @@
       const dayInfo = getDayInfo();
       let exportLines = [];
       exportLines.push(`🍱 【牧饗手作食研 - 訂便當結單統計】`);
-      if (dayInfo && dayInfo.isOff) {
-        exportLines.push(`🛑 本日狀態：店家公休未供餐 (${dayInfo.dateStr} ${dayInfo.dayLabel})`);
-      } else if (state.emergency.enabled) {
+      if (state.emergency.enabled) {
         exportLines.push(`🚨 今日模式：特殊限定供餐 (${state.emergency.name})`);
       } else {
         exportLines.push(`📅 日期：${dayInfo.dateStr} (${dayInfo.dayLabel})`);
@@ -1992,6 +2384,132 @@
       if (!textarea) return;
       textarea.select();
       navigator.clipboard.writeText(textarea.value).then(() => showToast('📋 已複製結單統計文字！'));
+    }
+
+    /**************************************************************
+     * 每週特選菜單編輯與 AI 辨識
+     **************************************************************/
+    function renderWeeklyEditForm() {
+      if (!state.isAdmin) return;
+      const grid = document.getElementById('weeklyEditFormGrid');
+      if (!grid) return;
+      grid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
+        const d = state.weeklyMenu[k];
+        return `
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-1.5">
+            <div class="flex justify-between items-center border-b pb-1">
+              <span class="font-bold text-emerald-950">${d.dayLabel}</span>
+              <input type="text" id="edit_date_${k}" value="${escapeHtml(d.dateStr)}" class="w-20 text-xs border rounded px-1.5 py-0.5 text-center bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-500">🍱 特選主菜 ($90)</label>
+              <input type="text" id="edit_special_${k}" value="${escapeHtml(d.special)}" class="w-full border rounded px-2 py-1 text-sm font-bold bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-500">🥣 每日例湯 ($40)</label>
+              <input type="text" id="edit_soup_${k}" value="${escapeHtml(d.soup)}" class="w-full border rounded px-2 py-1 text-sm font-bold bg-white">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveWeeklyConfig() {
+      Object.keys(state.weeklyMenu).forEach(k => {
+        const dateEl = document.getElementById(`edit_date_${k}`);
+        const specialEl = document.getElementById(`edit_special_${k}`);
+        const soupEl = document.getElementById(`edit_soup_${k}`);
+        if (dateEl) state.weeklyMenu[k].dateStr = dateEl.value.trim() || state.weeklyMenu[k].dateStr;
+        if (specialEl) state.weeklyMenu[k].special = specialEl.value.trim() || '特選主菜';
+        if (soupEl) state.weeklyMenu[k].soup = soupEl.value.trim() || '每日例湯';
+      });
+      sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
+      renderAll();
+      showToast('✅ 本週特選與例湯設定已儲存！');
+    }
+
+    function handleWeeklyImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1000;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          state.weeklyImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          sSet('moodfood_weekly_img', state.weeklyImageBase64);
+          renderHeaderAndBanner();
+          showToast('🖼️ 特選菜單照片上傳成功！');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeUploadedImage() {
+      state.weeklyImageBase64 = '';
+      sSet('moodfood_weekly_img', '');
+      renderHeaderAndBanner();
+      showToast('已移除菜單圖片');
+    }
+
+    async function parseMenuImageWithAI() {
+      if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
+      const apiKeyInput = document.getElementById('geminiApiKeyInput');
+      const apiKey = state.globalGeminiApiKey || (apiKeyInput ? apiKeyInput.value.trim() : '');
+      if (!apiKey) return alert('請先填入並儲存共用 Gemini API Key！');
+
+      const statusEl = document.getElementById('aiParseStatus');
+      const btn = document.getElementById('btnAiParse');
+      if (statusEl) statusEl.textContent = '⏳ AI 正在辨識特選與例湯，請稍候...';
+      if (btn) btn.disabled = true;
+
+      try {
+        const base64Content = state.weeklyImageBase64.split(',')[1];
+        const promptText = `辨識菜單圖片中週一至週六的一週特選主菜與每日例湯，輸出 JSON：
+{
+  "1": {"dateStr": "10/12", "special": "秘制鹹豬肉", "soup": "味噌貢丸蛋花湯"},
+  "2": {"dateStr": "10/13", "special": "香草烤雞腿排", "soup": "香菇雞湯"},
+  "3": {"dateStr": "10/14", "special": "沙茶羊肉", "soup": "竹筍排骨湯"},
+  "4": {"dateStr": "10/15", "special": "椒麻雞", "soup": "魷魚螺肉蒜"},
+  "5": {"dateStr": "10/16", "special": "BBQ肩小排", "soup": "薑絲肝連湯"},
+  "6": {"dateStr": "10/17", "special": "番茄煲牛肉", "soup": "剝皮辣椒雞湯"}
+}`;
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: 'image/jpeg', data: base64Content } }] }],
+            generationConfig: { response_mime_type: "application/json" }
+          })
+        });
+        const result = await response.json();
+        const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+        Object.keys(parsed).forEach(k => {
+          if (state.weeklyMenu[k]) {
+            state.weeklyMenu[k].dateStr = parsed[k].dateStr || state.weeklyMenu[k].dateStr;
+            state.weeklyMenu[k].special = parsed[k].special || state.weeklyMenu[k].special;
+            state.weeklyMenu[k].soup = parsed[k].soup || state.weeklyMenu[k].soup;
+          }
+        });
+        sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
+        renderAll();
+        if (statusEl) statusEl.textContent = '✅ AI 辨識完成並已更新欄位！';
+        showToast('🎉 AI 辨識更新成功！');
+      } catch (e) {
+        if (statusEl) statusEl.textContent = '❌ 辨識失敗，請檢查 API Key 或手動修改。';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     function showToast(msg) {
