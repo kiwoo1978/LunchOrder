@@ -56,7 +56,7 @@
           <i class="fa-solid fa-clipboard-list mr-1"></i> 訂單統計與匯出 (<span id="navOrderCount">0</span>)
         </button>
         <button onclick="switchView('weekly')" id="tabWeekly" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10">
-          <i class="fa-solid fa-clock mr-1"></i> 時段與菜單設定
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i> 突發/時段/菜單設定
         </button>
         <button onclick="logoutAdmin()" class="px-3 py-1.5 text-sm font-medium rounded text-red-300 hover:bg-red-900/40" title="登出管理員">
           <i class="fa-solid fa-right-from-bracket"></i>
@@ -80,6 +80,17 @@
         <span id="currentTimeDisplay" class="font-mono text-gray-500"></span>
       </div>
 
+      <!-- 🚨 突發狀況前台特殊公告橫幅 (啟動時才顯示) -->
+      <div id="emergencyFrontNotice" class="hidden bg-amber-500 text-white p-4 rounded-xl shadow-md">
+        <div class="flex items-start space-x-3">
+          <i class="fa-solid fa-triangle-exclamation text-2xl mt-0.5"></i>
+          <div>
+            <h3 class="font-bold text-base">⚠️ 今日特殊供餐公告</h3>
+            <p class="text-sm mt-1" id="emergencyNoticeText">今日因特殊狀況，常態餐點、單點、特選及例湯暫停供應，僅提供特製客製化便當！</p>
+          </div>
+        </div>
+      </div>
+
       <!-- 訂購人資訊與星期切換 -->
       <div class="mood-card rounded-xl p-4 shadow-sm">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
@@ -97,7 +108,7 @@
             </div>
           </div>
 
-          <div>
+          <div id="daySelectWrapper">
             <label class="block text-sm font-bold mood-green-text mb-1">
               <i class="fa-solid fa-calendar-day mr-1"></i>選擇點餐日期
             </label>
@@ -112,84 +123,98 @@
           </div>
         </div>
 
-        <!-- 當日特選與例湯看板 -->
-        <div class="mt-4 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
-            <div>
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-700 text-white">今日特選飯 $90</span>
-              <p class="text-lg font-bold text-amber-950 mt-1" id="bannerSpecialName">載入中...</p>
+        <!-- 常態當日特選與例湯看板 (突發模式隱藏) -->
+        <div id="regularSpecialBannerSection" class="mt-4 pt-3 border-t border-gray-200">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-amber-50/90 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-700 text-white">今日特選飯 $90</span>
+                <p class="text-lg font-bold text-amber-950 mt-1" id="bannerSpecialName">載入中...</p>
+              </div>
+              <button onclick="quickAddSpecial()" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
+                +1 點選
+              </button>
             </div>
-            <button onclick="quickAddSpecial()" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
-              +1 點選
+            <div class="bg-emerald-50/90 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold px-2 py-0.5 rounded mood-green text-white">每日例湯 $40</span>
+                <p class="text-lg font-bold text-emerald-950 mt-1" id="bannerSoupName">載入中...</p>
+              </div>
+              <button onclick="quickAddSoup()" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
+                +1 點選
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-3 text-right">
+            <button onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium">
+              <i class="fa-regular fa-calendar-check mr-1"></i>展開查看「本週特選與例湯一覽表」
             </button>
           </div>
-          <div class="bg-emerald-50/90 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
-            <div>
-              <span class="text-xs font-bold px-2 py-0.5 rounded mood-green text-white">每日例湯 $40</span>
-              <p class="text-lg font-bold text-emerald-950 mt-1" id="bannerSoupName">載入中...</p>
+
+          <div id="weeklyOverviewPanel" class="hidden mt-3 pt-3 border-t border-gray-200">
+            <div id="weeklyImagePreviewFront" class="mb-3 hidden">
+              <img id="frontMenuImg" src="" alt="當週菜單" class="max-h-72 mx-auto rounded-lg border shadow-sm">
             </div>
-            <button onclick="quickAddSoup()" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
-              +1 點選
-            </button>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center text-xs" id="weeklyOverviewGrid"></div>
           </div>
-        </div>
-
-        <div class="mt-3 text-right">
-          <button onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium">
-            <i class="fa-regular fa-calendar-check mr-1"></i>展開查看「本週特選與例湯一覽表」
-          </button>
-        </div>
-
-        <div id="weeklyOverviewPanel" class="hidden mt-3 pt-3 border-t border-gray-200">
-          <div id="weeklyImagePreviewFront" class="mb-3 hidden">
-            <img id="frontMenuImg" src="" alt="當週菜單" class="max-h-72 mx-auto rounded-lg border shadow-sm">
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center text-xs" id="weeklyOverviewGrid"></div>
         </div>
       </div>
 
-      <!-- 結單提示橫幅 -->
+      <!-- 結單 / 暫停營業提示橫幅 -->
       <div id="closedAlertBanner" class="hidden bg-red-100 border-l-4 border-red-600 text-red-800 p-4 rounded-r-xl shadow-sm">
         <div class="flex items-center">
           <i class="fa-solid fa-lock text-xl mr-3"></i>
           <div>
-            <p class="font-bold">目前非訂餐開放時段，已暫停下單！</p>
-            <p class="text-xs mt-0.5">如需加點或修改，請直接聯繫訂便當管理員。</p>
+            <p class="font-bold" id="closedAlertTitle">目前已暫停點餐！</p>
+            <p class="text-xs mt-0.5" id="closedAlertDetail">如需加點或修改，請直接聯繫訂便當管理員。</p>
           </div>
         </div>
       </div>
 
-      <!-- 菜單：餐盒 -->
-      <section>
-        <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
-          <h2 class="text-lg font-bold tracking-widest">餐盒 <span class="text-xs font-normal opacity-80 ml-2">BENTO BOX</span></h2>
-          <span class="text-xs text-emerald-200">點擊數量按鈕加減</span>
+      <!-- 🚨 突發狀況專屬菜單卡片 (啟動時只顯示此卡片) -->
+      <section id="emergencyMenuSection" class="hidden">
+        <div class="bg-red-800 text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
+          <h2 class="text-lg font-bold tracking-widest"><i class="fa-solid fa-star mr-1"></i>今日限定客製化餐盒</h2>
+          <span class="text-xs text-red-200">其他餐點暫停供應</span>
         </div>
-        <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
+        <div class="mood-card rounded-b-xl p-4" id="emergencyMenuItemBox"></div>
       </section>
 
-      <!-- 菜單：單點 -->
-      <section>
-        <div class="mood-brown text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
-          <h2 class="text-lg font-bold tracking-widest">單點 <span class="text-xs font-normal opacity-90 ml-2">A LA CARTE</span></h2>
-        </div>
-        <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="menuAlaCarteList"></div>
-      </section>
+      <!-- 常態菜單容器 (突發模式隱藏) -->
+      <div id="regularMenuContainer" class="space-y-6">
+        <!-- 菜單：餐盒 -->
+        <section>
+          <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
+            <h2 class="text-lg font-bold tracking-widest">餐盒 <span class="text-xs font-normal opacity-80 ml-2">BENTO BOX</span></h2>
+            <span class="text-xs text-emerald-200">點擊數量按鈕加減</span>
+          </div>
+          <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
+        </section>
 
-      <!-- 菜單：飲品/例湯 -->
-      <section>
-        <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
-          <h2 class="text-lg font-bold tracking-widest">飲品 / 例湯 <span class="text-xs font-normal opacity-80 ml-2">DRINKS & SOUP</span></h2>
-        </div>
-        <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3" id="menuDrinkSoupList"></div>
-      </section>
+        <!-- 菜單：單點 -->
+        <section>
+          <div class="mood-brown text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
+            <h2 class="text-lg font-bold tracking-widest">單點 <span class="text-xs font-normal opacity-90 ml-2">A LA CARTE</span></h2>
+          </div>
+          <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="menuAlaCarteList"></div>
+        </section>
+
+        <!-- 菜單：飲品/例湯 -->
+        <section>
+          <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
+            <h2 class="text-lg font-bold tracking-widest">飲品 / 例湯 <span class="text-xs font-normal opacity-80 ml-2">DRINKS & SOUP</span></h2>
+          </div>
+          <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3" id="menuDrinkSoupList"></div>
+        </section>
+      </div>
 
       <!-- 個人備註 -->
       <div class="mood-card rounded-xl p-4">
         <label class="block text-sm font-bold mood-green-text mb-1">
           <i class="fa-regular fa-comment-dots mr-1"></i>餐點備註 (選填)
         </label>
-        <input type="text" id="orderNoteInput" placeholder="例如：飯少、不要辣、蛋奶素..." 
+        <input type="text" id="orderNoteInput" placeholder="例如：飯少、蛋奶素、不要辣..." 
           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-800">
       </div>
 
@@ -242,7 +267,7 @@
         </div>
       </div>
 
-      <!-- 📢 升級：結單一鍵匯出公告區 (含付款狀態篩選) -->
+      <!-- 結單匯出區 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-3">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
@@ -256,7 +281,6 @@
           </button>
         </div>
 
-        <!-- 匯出顯示篩選開關 -->
         <div class="bg-gray-100 p-2.5 rounded-lg flex flex-wrap items-center gap-3 text-xs">
           <span class="font-bold text-gray-700"><i class="fa-solid fa-filter mr-1"></i>匯出名單模式：</span>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
@@ -277,9 +301,8 @@
           class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-xs font-mono focus:outline-none"></textarea>
       </div>
 
-      <!-- 下方兩欄 -->
+      <!-- 下方統計與收款 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- 左：給店家 -->
         <div class="mood-card rounded-xl p-5 shadow-sm">
           <h3 class="font-bold mood-green-text border-b pb-2 mb-3">
             <i class="fa-solid fa-phone-volume mr-1"></i>給店家：各品項數量匯總
@@ -287,7 +310,6 @@
           <div id="adminItemSummaryList" class="space-y-2 text-sm"></div>
         </div>
 
-        <!-- 右：收款管理 (改為勾選框 Checkbox) -->
         <div class="mood-card rounded-xl p-5 shadow-sm">
           <div class="flex justify-between items-center border-b pb-2 mb-3">
             <h3 class="font-bold mood-green-text">
@@ -300,10 +322,69 @@
       </div>
     </div>
 
-    <!-- ==================== 後台 2：設定開放時段與菜單 ==================== -->
-    <div id="viewWeekly" class="hidden space-y-6">
+    <!-- ==================== 後台 2：突發狀況 / 開放時段 / 菜單設定 ==================== -->
+    <div id="viewWeekly" class="space-y-6">
       
-      <!-- 開放時段設定 -->
+      <!-- 🚨 突發狀況與全域開放設定卡片 -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-red-500/30">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h2 class="text-xl font-bold text-red-900 flex items-center">
+            <i class="fa-solid fa-triangle-exclamation mr-2 text-red-600"></i>突發狀況設定與今日開放總開關
+          </h2>
+          <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">緊急應變控制</span>
+        </div>
+
+        <!-- 1. 今日開放總開關 -->
+        <div class="bg-red-50/50 p-4 rounded-xl border border-red-200 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+          <div>
+            <h4 class="font-bold text-sm text-gray-900">1. 今日是否開放訂餐？(最高權限開關)</h4>
+            <p class="text-xs text-gray-500 mt-0.5">若設定為「不開放」，即使在時間內同仁也無法點餐；若設為「開放」，則遵循下方設定時段。</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="setTodaySystemOpen(true)" id="btnOpenSystemYes" class="px-4 py-2 rounded-lg font-bold text-xs transition">
+              <i class="fa-solid fa-check mr-1"></i>今日開放訂餐
+            </button>
+            <button onclick="setTodaySystemOpen(false)" id="btnOpenSystemNo" class="px-4 py-2 rounded-lg font-bold text-xs transition">
+              <i class="fa-solid fa-ban mr-1"></i>今日暫停/不開放
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. 突發單一便當模式 -->
+        <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-300 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="emergencyModeCheckbox" onchange="toggleEmergencyMode(this.checked)" class="w-5 h-5 text-amber-600 rounded">
+              <label for="emergencyModeCheckbox" class="font-bold text-sm text-amber-950 cursor-pointer">
+                啟用「突發狀況限定模式」(暫停所有常規餐點、單點與湯品，只賣特製便當)
+              </label>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded font-bold" id="emergencyStatusTag">未啟用</span>
+          </div>
+
+          <div id="emergencyConfigInputs" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">客製化便當名稱</label>
+              <input type="text" id="emergencyItemName" value="牧饗客製化便當" class="w-full border rounded-lg px-3 py-1.5 text-sm font-bold bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">便當單價 (元)</label>
+              <input type="number" id="emergencyItemPrice" value="150" class="w-full border rounded-lg px-3 py-1.5 text-sm font-bold text-red-600 bg-white">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-gray-700 mb-1">今日公告說明文字 (將顯示在前台頂部醒目橫幅)</label>
+              <input type="text" id="emergencyNoticeInput" value="今日因特殊狀況，常態餐盒、單點主菜與例湯暫停供應，僅提供特製客製化便當！" class="w-full border rounded-lg px-3 py-1.5 text-xs bg-white">
+            </div>
+            <div class="sm:col-span-2 text-right">
+              <button onclick="saveEmergencyConfig()" class="bg-amber-700 hover:bg-amber-800 text-white px-5 py-2 rounded-lg text-xs font-bold transition shadow">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存突發狀況設定並套用
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⏰ 點餐時段設定卡片 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <div class="flex justify-between items-center border-b pb-2">
           <h2 class="text-xl font-bold mood-green-text">
@@ -322,18 +403,12 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1">
-                <i class="fa-regular fa-clock mr-1 text-emerald-700"></i>每天開始點餐時間
-              </label>
-              <input type="time" id="startTimeInput" onchange="updateTimeConfig()"
-                class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
+              <label class="block text-xs font-bold text-gray-700 mb-1">每天開始點餐時間</label>
+              <input type="time" id="startTimeInput" onchange="updateTimeConfig()" class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-700 mb-1">
-                <i class="fa-solid fa-bell mr-1 text-red-600"></i>每天截止點餐時間 (結單)
-              </label>
-              <input type="time" id="endTimeInput" onchange="updateTimeConfig()"
-                class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
+              <label class="block text-xs font-bold text-gray-700 mb-1">每天截止點餐時間 (自動結單)</label>
+              <input type="time" id="endTimeInput" onchange="updateTimeConfig()" class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
             </div>
           </div>
           <div class="text-xs text-gray-500 flex justify-between items-center">
@@ -345,20 +420,19 @@
         </div>
       </div>
 
-      <!-- 菜單圖片與 AI 辨識 -->
+      <!-- 常態菜單照片與 AI 辨識設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
-          <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>上傳當週照片 ＆ 菜單設定
+          <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>常態菜單設定 (當週特選照片 ＆ AI辨識)
         </h2>
 
-        <!-- Gemini API Key -->
         <div class="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3.5">
           <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div>
               <label class="text-xs font-bold text-emerald-950">
                 <i class="fa-solid fa-key mr-1"></i>Google Gemini API Key (圖片 AI 自動辨識)
               </label>
-              <p class="text-xs text-gray-500">可至 Google AI Studio 免費申請，金鑰僅儲存在瀏覽器本機端。</p>
+              <p class="text-xs text-gray-500">金鑰僅安全儲存在瀏覽器本機端。</p>
             </div>
             <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
               onchange="saveGeminiKey(this.value)"
@@ -387,7 +461,6 @@
           </div>
         </div>
 
-        <!-- 表單 -->
         <div>
           <div class="flex justify-between items-center mb-3">
             <h3 class="font-bold mood-green-text">本週特選與例湯明細設定</h3>
@@ -506,13 +579,26 @@
       weeklyImageBase64: '',
       orders: [],
       currentCart: {},
+      
+      // 1. 今日開放總開關
+      isTodayOpen: true,
+
+      // 2. 時段限制
       timeLimit: {
         enabled: true,
         startTime: '08:30',
         endTime: '10:30'
       },
       manualOverride: null,
-      exportFilterMode: 'all' // 'all', 'unpaidOnly', 'paidOnly'
+      exportFilterMode: 'all',
+
+      // 3. 🚨 突發狀況模式
+      emergency: {
+        enabled: false,
+        name: '牧饗客製化便當',
+        price: 150,
+        notice: '今日因特殊狀況，常態餐點、單點、特選及例湯暫停供應，僅提供特製客製化便當！'
+      }
     };
 
     function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -538,29 +624,54 @@
       const localOrders = sGet('moodfood_orders');
       if (localOrders) state.orders = JSON.parse(localOrders);
 
+      const localTodayOpen = sGet('moodfood_is_today_open');
+      if (localTodayOpen !== null) state.isTodayOpen = JSON.parse(localTodayOpen);
+
       const localTime = sGet('moodfood_time_config');
       if (localTime) state.timeLimit = JSON.parse(localTime);
 
       const localOverride = sGet('moodfood_manual_override');
       if (localOverride) state.manualOverride = localOverride;
 
+      const localEmergency = sGet('moodfood_emergency');
+      if (localEmergency) state.emergency = JSON.parse(localEmergency);
+
       const savedKey = sGet('moodfood_gemini_key');
       if (savedKey) document.getElementById('geminiApiKeyInput').value = savedKey;
 
+      // 初始化表單控制項
       document.getElementById('timeLimitEnabled').checked = state.timeLimit.enabled;
       document.getElementById('startTimeInput').value = state.timeLimit.startTime;
       document.getElementById('endTimeInput').value = state.timeLimit.endTime;
+
+      document.getElementById('emergencyModeCheckbox').checked = state.emergency.enabled;
+      document.getElementById('emergencyItemName').value = state.emergency.name;
+      document.getElementById('emergencyItemPrice').value = state.emergency.price;
+      document.getElementById('emergencyNoticeInput').value = state.emergency.notice;
+
+      updateEmergencyUI();
+      updateTodayOpenBtnUI();
 
       setInterval(checkTimeAndStatus, 1000);
       checkTimeAndStatus();
       renderAll();
     });
 
+    /**************************************************************
+     * 開放狀態判斷核心邏輯
+     **************************************************************/
     function isCurrentlyOpen() {
+      // 1. 最高權限：管理員若設定今日不開放，則絕對不開放
+      if (!state.isTodayOpen) return false;
+
+      // 2. 管理員手動覆寫 (結單 / 強制開放)
       if (state.manualOverride === 'open') return true;
       if (state.manualOverride === 'closed') return false;
+
+      // 3. 是否啟用時段限制
       if (!state.timeLimit.enabled) return true;
 
+      // 4. 時段比對
       const now = new Date();
       const currentHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       return (currentHM >= state.timeLimit.startTime && currentHM <= state.timeLimit.endTime);
@@ -574,11 +685,16 @@
       const open = isCurrentlyOpen();
       const badge = document.getElementById('orderStatusBadge');
       const closedAlert = document.getElementById('closedAlertBanner');
+      const closedTitle = document.getElementById('closedAlertTitle');
+      const closedDetail = document.getElementById('closedAlertDetail');
       const submitBtn = document.getElementById('btnSubmitOrder');
       const btnManual = document.getElementById('btnManualOverride');
       const noticeText = document.getElementById('timeNoticeText');
 
-      if (state.manualOverride === 'open') {
+      // 時段與公告文字
+      if (!state.isTodayOpen) {
+        noticeText.innerHTML = `<b class="text-red-700">【今日暫停訂餐服務】</b> (管理員已設定今日不開放)`;
+      } else if (state.manualOverride === 'open') {
         noticeText.innerHTML = `<b class="text-amber-700">【管理員手動開放中】</b> (設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime})`;
       } else if (state.manualOverride === 'closed') {
         noticeText.innerHTML = `<b class="text-red-700">【管理員手動結單鎖定中】</b>`;
@@ -600,9 +716,18 @@
           btnManual.className = 'px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition';
         }
       } else {
-        badge.textContent = '已結單鎖定';
+        badge.textContent = !state.isTodayOpen ? '今日不開放' : '已結單鎖定';
         badge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-red-600 text-white';
         closedAlert.classList.remove('hidden');
+
+        if (!state.isTodayOpen) {
+          closedTitle.textContent = '今日管理員設定暫停訂餐，暫不開放下單！';
+          closedDetail.textContent = '如有疑問請直接洽詢訂便當管理人員。';
+        } else {
+          closedTitle.textContent = '目前非訂餐開放時段，已結單鎖定！';
+          closedDetail.textContent = '如需臨時加點或修改，請洽管理員。';
+        }
+
         submitBtn.disabled = true;
         submitBtn.className = 'w-full sm:w-auto bg-gray-400 cursor-not-allowed text-white font-bold px-8 py-2.5 rounded-xl flex items-center justify-center space-x-2';
 
@@ -614,8 +739,70 @@
 
       const hint = document.getElementById('adminCurrentStatusHint');
       if (hint) {
-        hint.textContent = `目前系統狀態：${open ? '【開放中】' : '【已鎖定】'} ｜ 設定時段：${state.timeLimit.startTime} ~ ${state.timeLimit.endTime}`;
+        let txt = `今日設定：${state.isTodayOpen ? '【開放日】' : '【暫停日】'} ｜ 目前狀態：${open ? '【開放中】' : '【已鎖定】'}`;
+        if (state.emergency.enabled) txt += ` ｜ 🚨已啟動「${state.emergency.name}」突發模式`;
+        hint.textContent = txt;
       }
+    }
+
+    /**************************************************************
+     * 突發狀況與全域控制開關
+     **************************************************************/
+    function setTodaySystemOpen(openStatus) {
+      state.isTodayOpen = openStatus;
+      sSet('moodfood_is_today_open', JSON.stringify(state.isTodayOpen));
+      updateTodayOpenBtnUI();
+      checkTimeAndStatus();
+      showToast(openStatus ? '✅ 已設定今日為【開放訂餐日】(依時段開放)' : '⛔ 已設定今日為【暫停訂餐日】(全天不開放)');
+    }
+
+    function updateTodayOpenBtnUI() {
+      const btnYes = document.getElementById('btnOpenSystemYes');
+      const btnNo = document.getElementById('btnOpenSystemNo');
+      if (state.isTodayOpen) {
+        btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow';
+        btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
+      } else {
+        btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
+        btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow';
+      }
+    }
+
+    function toggleEmergencyMode(isChecked) {
+      state.emergency.enabled = isChecked;
+      updateEmergencyUI();
+    }
+
+    function saveEmergencyConfig() {
+      state.emergency.enabled = document.getElementById('emergencyModeCheckbox').checked;
+      state.emergency.name = document.getElementById('emergencyItemName').value.trim() || '牧饗客製化便當';
+      state.emergency.price = Number(document.getElementById('emergencyItemPrice').value) || 150;
+      state.emergency.notice = document.getElementById('emergencyNoticeInput').value.trim() || '今日因特殊狀況，僅提供特製客製化便當！';
+
+      sSet('moodfood_emergency', JSON.stringify(state.emergency));
+      state.currentCart = {}; // 切換模式時清空當前購物車
+      updateEmergencyUI();
+      renderAll();
+      showToast(state.emergency.enabled ? '🚨 突發狀況模式已啟動！已切換為客製化便當菜單' : '✅ 突發狀況模式已關閉，已恢復常態完整菜單');
+    }
+
+    function updateEmergencyUI() {
+      const isEm = state.emergency.enabled;
+      const tag = document.getElementById('emergencyStatusTag');
+      if (isEm) {
+        tag.textContent = '已啟用';
+        tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-red-600 text-white';
+      } else {
+        tag.textContent = '未啟用';
+        tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-gray-300 text-gray-700';
+      }
+
+      // 控制前台元件的顯示與隱藏
+      document.getElementById('emergencyFrontNotice').classList.toggle('hidden', !isEm);
+      document.getElementById('emergencyNoticeText').textContent = state.emergency.notice;
+      document.getElementById('emergencyMenuSection').classList.toggle('hidden', !isEm);
+      document.getElementById('regularMenuContainer').classList.toggle('hidden', isEm);
+      document.getElementById('regularSpecialBannerSection').classList.toggle('hidden', isEm);
     }
 
     function updateTimeConfig() {
@@ -644,6 +831,9 @@
       checkTimeAndStatus();
     }
 
+    /**************************************************************
+     * 畫面渲染
+     **************************************************************/
     function renderAll() {
       renderHeaderAndBanner();
       renderMenuLists();
@@ -658,6 +848,7 @@
     }
 
     function getDisplayItemName(item) {
+      if (item.id === 'em_custom') return item.name;
       const dayInfo = getDayInfo();
       if (item.isSpecial) return `今日特選飯(${dayInfo.special})`;
       if (item.isSoup) return `每日例湯(${dayInfo.soup})`;
@@ -666,8 +857,12 @@
 
     function renderHeaderAndBanner() {
       const dayInfo = getDayInfo();
-      document.getElementById('headerDateInfo').textContent = 
-        `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
+      if (state.emergency.enabled) {
+        document.getElementById('headerDateInfo').textContent = `⚠️ 今日特殊供餐模式：${state.emergency.name} ($${state.emergency.price})`;
+      } else {
+        document.getElementById('headerDateInfo').textContent = 
+          `目前選擇：${dayInfo.dateStr} (${dayInfo.dayLabel}) ｜ 特選：${dayInfo.special}`;
+      }
       
       document.getElementById('bannerSpecialName').textContent = dayInfo.special;
       document.getElementById('bannerSoupName').textContent = dayInfo.soup;
@@ -732,6 +927,20 @@
     }
 
     function renderMenuLists() {
+      // 突發模式卡片渲染
+      if (state.emergency.enabled) {
+        const emItem = {
+          id: 'em_custom',
+          name: state.emergency.name,
+          price: state.emergency.price,
+          tag: '今日限定',
+          tagType: 'badge-limit',
+          note: '其他餐點皆暫停提供'
+        };
+        document.getElementById('emergencyMenuItemBox').innerHTML = renderMenuCard(emItem);
+      }
+
+      // 常規菜單渲染
       document.getElementById('menuBentoList').innerHTML = FIXED_MENU.bento.map(renderMenuCard).join('');
       document.getElementById('menuAlaCarteList').innerHTML = FIXED_MENU.alacarte.map(renderMenuCard).join('');
       document.getElementById('menuDrinkSoupList').innerHTML = FIXED_MENU.drinkSoup.map(renderMenuCard).join('');
@@ -739,6 +948,10 @@
 
     function getAllMenuItemsMap() {
       const map = {};
+      if (state.emergency.enabled) {
+        map['em_custom'] = { id: 'em_custom', name: state.emergency.name, price: state.emergency.price };
+        return map;
+      }
       [...FIXED_MENU.bento, ...FIXED_MENU.alacarte, ...FIXED_MENU.drinkSoup].forEach(it => { map[it.id] = it; });
       return map;
     }
@@ -824,7 +1037,7 @@
 
     function submitOrder() {
       if (!isCurrentlyOpen()) {
-        alert('抱歉，目前非點餐開放時段！如需加點請洽管理員。');
+        alert(state.isTodayOpen ? '抱歉，目前已超過開放點餐時段！' : '抱歉，今日暫停提供點餐服務！');
         return;
       }
 
@@ -870,13 +1083,13 @@
         total: totalAmount,
         qty: totalQty,
         paid: false,
-        dateLabel: `${dayInfo.dateStr}(${dayInfo.dayLabel})`,
+        dateLabel: state.emergency.enabled ? '突發限定供餐' : `${dayInfo.dateStr}(${dayInfo.dayLabel})`,
         time: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
       };
 
       const existingIdx = state.orders.findIndex(o => o.name === userName);
       if (existingIdx >= 0) {
-        newOrder.paid = state.orders[existingIdx].paid; // 保留原付款狀態
+        newOrder.paid = state.orders[existingIdx].paid;
         state.orders[existingIdx] = newOrder;
       } else {
         state.orders.push(newOrder);
@@ -889,7 +1102,7 @@
     }
 
     /**************************************************************
-     * 後台訂單統計、勾選付款與多模式匯出
+     * 後台訂單統計與匯出
      **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
@@ -931,7 +1144,6 @@
         progressEl.innerHTML = `收款進度：<b class="text-emerald-700">${paidCount}/${totalPeople}</b> 人 (已收 $${paidAmount} / <span class="text-red-600">待收 $${unpaidAmount}</span>)`;
       }
 
-      // 給店家數量統計
       const itemSummaryEl = document.getElementById('adminItemSummaryList');
       const itemKeys = Object.keys(itemSummaryMap);
       if (itemKeys.length === 0) {
@@ -948,7 +1160,6 @@
         `).join('');
       }
 
-      // 👤 同仁收款管理清單 (升級為直接 Checkbox 勾選)
       const personListEl = document.getElementById('adminPersonOrderList');
       if (state.orders.length === 0) {
         personListEl.innerHTML = `<p class="text-gray-400 py-2">尚無同仁下單</p>`;
@@ -983,11 +1194,15 @@
         `).join('');
       }
 
-      // 📋 結單匯出文字產生 (依模式動態篩選)
+      // 匯出排版
       const dayInfo = getDayInfo();
       let exportLines = [];
       exportLines.push(`🍱 【牧饗手作食研 - 訂便當結單統計】`);
-      exportLines.push(`📅 日期：${dayInfo.dateStr} (${dayInfo.dayLabel})`);
+      if (state.emergency.enabled) {
+        exportLines.push(`🚨 今日模式：特殊限定供餐 (${state.emergency.name})`);
+      } else {
+        exportLines.push(`📅 日期：${dayInfo.dateStr} (${dayInfo.dayLabel})`);
+      }
       exportLines.push(`----------------------------------------`);
       exportLines.push(`📊 【餐點總計】（共 ${totalItems} 份 ｜ 總計 $${totalAmount}）`);
       
@@ -1007,7 +1222,6 @@
           exportLines.push(`${i + 1}. ${o.name}：${o.itemsSummary}${o.note ? ` (${o.note})` : ''} ➡️ 應收 $${o.total}${statusTag}`);
         });
 
-        // 附帶未付款催繳提醒
         const unpaids = state.orders.filter(o => !o.paid);
         if (unpaids.length > 0) {
           exportLines.push(`\n⚠️ 尚未付款同仁 (${unpaids.length}人)：${unpaids.map(u => `${u.name}($${u.total})`).join('、')}，請記得繳費喔！`);
@@ -1024,7 +1238,7 @@
           unpaids.forEach((o, i) => {
             exportLines.push(`${i + 1}. ${o.name}：應收 $${o.total} (${o.itemsSummary})`);
           });
-          exportLines.push(`\n📢 請以上同仁有空時記得將便當費用繳給管理員，謝謝大家！`);
+          exportLines.push(`\n📢 請以上同仁有空時記得將費用繳交給管理員，謝謝！`);
         }
 
       } else if (state.exportFilterMode === 'paidOnly') {
@@ -1072,7 +1286,7 @@
     }
 
     /**************************************************************
-     * 管理員身分與菜單管理
+     * 管理員身分與分頁切換
      **************************************************************/
     function toggleAdminModal() {
       if (state.isAdmin) {
@@ -1153,7 +1367,7 @@
       });
       sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
       renderAll();
-      showToast('✅ 菜單設定已儲存！');
+      showToast('✅ 常態菜單設定已儲存！');
     }
 
     function saveGeminiKey(val) {
