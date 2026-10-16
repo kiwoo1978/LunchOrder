@@ -521,7 +521,7 @@
         </div>
       </div>
 
-      <!-- 全域共享 Gemini API Key 設定 -->
+      <!-- 全域共享 Gemini API Key 設定 (已串接 Firebase 雲端共享) -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
           <i class="fa-solid fa-key mr-1"></i>全域共享 Google Gemini API Key
@@ -530,13 +530,13 @@
           <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div>
               <label class="text-xs font-bold text-emerald-950">Gemini API 金鑰</label>
-              <p class="text-xs text-gray-500">只需輸入一次並儲存，其他管理員的手機或電腦即可直接共用此金鑰進行圖片辨識！</p>
+              <p class="text-xs text-gray-500">只需由任一管理員在此儲存一次，即自動同步至 Firebase 雲端，其他設備皆可直接共用！</p>
             </div>
             <div class="flex gap-2">
               <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
                 class="border border-emerald-300 rounded px-2.5 py-1.5 text-xs w-full sm:w-64 bg-white">
-              <button onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0">
-                儲存金鑰
+              <button onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 cursor-pointer">
+                儲存金鑰並同步
               </button>
             </div>
           </div>
@@ -868,13 +868,14 @@
         const localQuota = sGet('moodfood_special_quota');
         if (localQuota !== null) state.specialQuotaLimit = Number(localQuota);
 
+        // 先讀取本地金鑰做為緩存備案
         const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
         if (savedKey) {
           state.globalGeminiApiKey = savedKey;
           const apiKeyInput = document.getElementById('geminiApiKeyInput');
           if (apiKeyInput) apiKeyInput.value = savedKey;
           const apiKeyHint = document.getElementById('apiKeyStatusHint');
-          if (apiKeyHint) apiKeyHint.textContent = '✅ 已設定共用金鑰，所有管理員裝置皆可直接使用圖片辨識！';
+          if (apiKeyHint) apiKeyHint.textContent = '✅ 已載入金鑰備存，雲端同步中...';
         }
 
         const timeLimitCheck = document.getElementById('timeLimitEnabled');
@@ -906,7 +907,7 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 監聽 Firebase 訂單即時更新 (多裝置即時同步)
+        // 🌟 核心：監聽 Firebase 雲端即時連線、訂單與共享 API Key
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -919,6 +920,7 @@
             }
           });
 
+          // 1. 即時監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             if (data) {
@@ -930,7 +932,23 @@
             }
             renderAll();
           }, error => {
-            console.warn("讀取 Firebase 失敗，使用本地訂單備存：", error);
+            console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
+          });
+
+          // 2. 即時監聽全域共享 Gemini API Key
+          db.ref('settings/geminiApiKey').on('value', snapshot => {
+            const cloudKey = snapshot.val();
+            if (cloudKey) {
+              state.globalGeminiApiKey = cloudKey;
+              sSet('moodfood_shared_gemini_key', cloudKey);
+              sSet('moodfood_gemini_key', cloudKey);
+
+              const apiKeyInput = document.getElementById('geminiApiKeyInput');
+              if (apiKeyInput) apiKeyInput.value = cloudKey;
+
+              const apiKeyHint = document.getElementById('apiKeyStatusHint');
+              if (apiKeyHint) apiKeyHint.textContent = '✅ 已從雲端載入共用金鑰，所有管理員設備皆可直接使用圖片辨識！';
+            }
           });
         }
 
@@ -1178,7 +1196,7 @@
             let w = img.width, h = img.height;
             if (w > maxDim || h > maxDim) {
               if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-              else { w = Math.round(w * maxDim / h); h = maxDim; }
+              else { w = Math.round(h * maxDim / h); h = maxDim; }
             }
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
@@ -1495,17 +1513,29 @@
       showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
     }
 
+    // 🌟 儲存 Gemini API Key 時同時同步至 Firebase 雲端節點
     function saveGeminiKeyAction() {
       const keyInput = document.getElementById('geminiApiKeyInput');
       const key = keyInput ? keyInput.value.trim() : '';
       state.globalGeminiApiKey = key;
       sSet('moodfood_shared_gemini_key', key);
       sSet('moodfood_gemini_key', key);
+
+      if (db) {
+        db.ref('settings/geminiApiKey').set(key).then(() => {
+          showToast('🔑 API Key 已同步至雲端，所有設備皆可共享！');
+        }).catch(err => {
+          console.error("雲端金鑰同步失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast('🔑 共用 Gemini API Key 已儲存於本地');
+      }
+
       const hint = document.getElementById('apiKeyStatusHint');
       if (hint) {
-        hint.textContent = key ? '✅ 已成功儲存共用金鑰！其他裝置登入後台即可直接使用。' : '⚠️ 已清空共用金鑰。';
+        hint.textContent = key ? '✅ 已成功儲存並同步共用金鑰！所有管理員設備皆可直接使用。' : '⚠️ 已清空金鑰。';
       }
-      showToast('🔑 共用 Gemini API Key 已儲存生效！');
     }
 
     /**************************************************************
