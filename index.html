@@ -609,7 +609,7 @@
         </div>
       </div>
 
-      <!-- 常態每週特選菜單照片與 AI 辨識設定 (含公休勾選) -->
+      <!-- 常態每週特選菜單照片與 AI 辨識設定 (含防呆確認與取消復原按鈕) -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
           <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>一週特選與每日例湯照片設定
@@ -625,10 +625,10 @@
           <div id="adminImagePreviewArea" class="hidden mt-4">
             <img id="adminPreviewImg" src="" alt="預覽圖" class="max-h-64 mx-auto rounded-lg shadow border mb-3">
             <div class="flex justify-center space-x-2">
-              <button onclick="parseMenuImageWithAI()" id="btnAiParse" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition">
+              <button onclick="parseMenuImageWithAI()" id="btnAiParse" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition cursor-pointer">
                 <i class="fa-solid fa-robot mr-1"></i> AI 自動辨識圖片並填入特選、例湯與公休
               </button>
-              <button onclick="removeUploadedImage()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition">
+              <button onclick="removeUploadedImage()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition cursor-pointer">
                 移除圖片
               </button>
             </div>
@@ -637,11 +637,16 @@
         </div>
 
         <div>
-          <div class="flex justify-between items-center mb-3">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
             <h3 class="font-bold mood-green-text">本週特選、例湯與公休設定</h3>
-            <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition">
-              <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
-            </button>
+            <div class="flex items-center space-x-2">
+              <button onclick="cancelAiParseAndRevert()" id="btnCancelAiParse" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition cursor-pointer" title="放棄尚未儲存的辨識修改，還原成原本菜單">
+                <i class="fa-solid fa-rotate-left mr-1"></i> 取消辨識 (復原原本菜單)
+              </button>
+              <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
         </div>
@@ -868,7 +873,6 @@
         const localQuota = sGet('moodfood_special_quota');
         if (localQuota !== null) state.specialQuotaLimit = Number(localQuota);
 
-        // 先讀取本地金鑰做為緩存備案
         const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
         if (savedKey) {
           state.globalGeminiApiKey = savedKey;
@@ -907,7 +911,7 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 🌟 核心：監聽 Firebase 雲端即時連線、訂單與共享 API Key
+        // 監聽 Firebase 雲端即時連線、訂單與共享 API Key
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -920,7 +924,7 @@
             }
           });
 
-          // 1. 即時監聽訂單
+          // 即時監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             if (data) {
@@ -935,7 +939,7 @@
             console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
           });
 
-          // 2. 即時監聽全域共享 Gemini API Key
+          // 即時監聽全域共享 Gemini API Key
           db.ref('settings/geminiApiKey').on('value', snapshot => {
             const cloudKey = snapshot.val();
             if (cloudKey) {
@@ -1196,7 +1200,7 @@
             let w = img.width, h = img.height;
             if (w > maxDim || h > maxDim) {
               if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-              else { w = Math.round(h * maxDim / h); h = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
             }
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
@@ -1433,6 +1437,7 @@
       let summaryParts = [];
       newItems.forEach(it => {
         newTotal += it.qty * it.price;
+        summaryParts.join('、');
         summaryParts.push(`${it.name} x${it.qty}`);
       });
 
@@ -1513,7 +1518,6 @@
       showToast(`已載入「${name}」先前的餐點內容，可直接增減或修改！`);
     }
 
-    // 🌟 儲存 Gemini API Key 時同時同步至 Firebase 雲端節點
     function saveGeminiKeyAction() {
       const keyInput = document.getElementById('geminiApiKeyInput');
       const key = keyInput ? keyInput.value.trim() : '';
@@ -2563,7 +2567,7 @@
     }
 
     /**************************************************************
-     * 每週特選菜單編輯與 AI 辨識 (支援公休勾選)
+     * 每週特選菜單編輯與 AI 辨識 (支援防呆與取消復原)
      **************************************************************/
     function renderWeeklyEditForm() {
       if (!state.isAdmin) return;
@@ -2598,10 +2602,18 @@
     }
 
     function toggleDayClosed(k, isChecked) {
-      if (state.weeklyMenu[k]) {
-        state.weeklyMenu[k].isClosed = isChecked;
-        renderWeeklyEditForm();
-      }
+      const specialEl = document.getElementById(`edit_special_${k}`);
+      const soupEl = document.getElementById(`edit_soup_${k}`);
+      if (specialEl) specialEl.disabled = isChecked;
+      if (soupEl) soupEl.disabled = isChecked;
+    }
+
+    // 🌟 防呆取消按鈕：放棄尚未儲存的辨識或修改內容，將欄位復原為原菜單
+    function cancelAiParseAndRevert() {
+      renderWeeklyEditForm();
+      const statusEl = document.getElementById('aiParseStatus');
+      if (statusEl) statusEl.textContent = '↩️ 已復原為原本儲存的菜單內容！';
+      showToast('↩️ 已復原原本的一週菜單！');
     }
 
     function saveWeeklyConfig() {
@@ -2618,6 +2630,8 @@
       });
       sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
       renderAll();
+      const statusEl = document.getElementById('aiParseStatus');
+      if (statusEl) statusEl.textContent = '✅ 本週菜單設定已正式儲存生效！';
       showToast('✅ 本週特選、例湯與公休設定已儲存！');
     }
 
@@ -2655,6 +2669,7 @@
       showToast('已移除菜單圖片');
     }
 
+    // 🌟 AI 辨識防呆機制：只填入編輯欄位，不覆蓋 state，確認無誤按儲存，若不要可按「取消辨識」復原
     async function parseMenuImageWithAI() {
       if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
       const apiKeyInput = document.getElementById('geminiApiKeyInput');
@@ -2688,18 +2703,26 @@
         });
         const result = await response.json();
         const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+        // 防呆填入：僅填入輸入欄位，不覆蓋目前 state 與儲存紀錄
         Object.keys(parsed).forEach(k => {
-          if (state.weeklyMenu[k]) {
-            state.weeklyMenu[k].dateStr = parsed[k].dateStr || state.weeklyMenu[k].dateStr;
-            state.weeklyMenu[k].special = parsed[k].special || state.weeklyMenu[k].special;
-            state.weeklyMenu[k].soup = parsed[k].soup || state.weeklyMenu[k].soup;
-            state.weeklyMenu[k].isClosed = !!parsed[k].isClosed;
+          const dateEl = document.getElementById(`edit_date_${k}`);
+          const specialEl = document.getElementById(`edit_special_${k}`);
+          const soupEl = document.getElementById(`edit_soup_${k}`);
+          const closedEl = document.getElementById(`edit_closed_${k}`);
+
+          if (dateEl && parsed[k].dateStr) dateEl.value = parsed[k].dateStr;
+          if (specialEl && parsed[k].special) specialEl.value = parsed[k].special;
+          if (soupEl && parsed[k].soup) soupEl.value = parsed[k].soup;
+          if (closedEl) {
+            closedEl.checked = !!parsed[k].isClosed;
+            if (specialEl) specialEl.disabled = !!parsed[k].isClosed;
+            if (soupEl) soupEl.disabled = !!parsed[k].isClosed;
           }
         });
-        sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
-        renderAll();
-        if (statusEl) statusEl.textContent = '✅ AI 辨識完成並已更新特選菜單與公休狀態！確認無誤可點擊儲存！';
-        showToast('🎉 AI 辨識更新成功！');
+
+        if (statusEl) statusEl.textContent = '🔍 AI 辨識內容已暫填入下方欄位，確認請點「儲存本週菜單設定」，若不要請按「取消辨識」！';
+        showToast('📋 AI 已填入欄位，請核對後按儲存！');
       } catch (e) {
         if (statusEl) statusEl.textContent = '❌ 辨識失敗，請檢查 API Key 或手動修改。';
       } finally {
