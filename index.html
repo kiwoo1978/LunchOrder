@@ -805,19 +805,60 @@
       },
       seasonMode: isSummerMonth ? 'drink' : 'soup',
       globalGeminiApiKey: '',
-      specialQuotaLimit: 5
+      specialQuotaLimit: 5,
+      lastOrderDate: ''
     };
 
     function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function sSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
+    // 取得當前本地 YYYY-MM-DD 日期字串
+    function getTodayDateString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
     // 同步訂單至 Firebase 雲端與本地
     function syncOrdersToCloud(ordersList) {
       sSet('moodfood_orders', JSON.stringify(ordersList));
+      const todayStr = getTodayDateString();
+      state.lastOrderDate = todayStr;
+      sSet('moodfood_last_order_date', todayStr);
+
       if (db) {
         db.ref('orders').set(ordersList).catch(err => {
-          console.error("雲端同步失敗:", err);
+          console.error("雲端同步訂單失敗:", err);
         });
+        db.ref('lastOrderDate').set(todayStr).catch(err => {
+          console.error("雲端同步訂單日期失敗:", err);
+        });
+      }
+    }
+
+    // 🌟 跨日（每日 24:00 後）自動重置檢驗
+    function checkDailyAutoReset() {
+      const todayStr = getTodayDateString();
+      const recordDate = state.lastOrderDate || sGet('moodfood_last_order_date');
+
+      // 若記錄的訂單日期存在且不是今天，代表已跨過午夜 24:00
+      if (recordDate && recordDate !== todayStr) {
+        state.orders = [];
+        state.specialQuotaLimit = 5;
+        state.lastOrderDate = todayStr;
+        sSet('moodfood_orders', '[]');
+        sSet('moodfood_special_quota', 5);
+        sSet('moodfood_last_order_date', todayStr);
+
+        if (db) {
+          db.ref('orders').set([]).catch(e => console.error(e));
+          db.ref('lastOrderDate').set(todayStr).catch(e => console.error(e));
+        }
+
+        renderAll();
+        console.log(`[系統提示] 已跨入新的一天 (${todayStr})，系統自動清空前一日訂餐紀錄！`);
       }
     }
 
@@ -873,6 +914,13 @@
         const localQuota = sGet('moodfood_special_quota');
         if (localQuota !== null) state.specialQuotaLimit = Number(localQuota);
 
+        const localDate = sGet('moodfood_last_order_date');
+        if (localDate) state.lastOrderDate = localDate;
+
+        // 本地跨日檢驗
+        checkDailyAutoReset();
+
+        // 讀取本地金鑰做為緩存備案
         const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
         if (savedKey) {
           state.globalGeminiApiKey = savedKey;
@@ -911,7 +959,7 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 監聽 Firebase 雲端即時連線、訂單與共享 API Key
+        // 監聽 Firebase 雲端即時連線、訂單、日期與共享 API Key
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -924,9 +972,30 @@
             }
           });
 
+          // 即時監聽雲端記錄的日期（若跨日則執行清除）
+          db.ref('lastOrderDate').on('value', snapshot => {
+            const cloudDate = snapshot.val();
+            const todayStr = getTodayDateString();
+            if (cloudDate) {
+              state.lastOrderDate = cloudDate;
+              sSet('moodfood_last_order_date', cloudDate);
+              if (cloudDate !== todayStr) {
+                checkDailyAutoReset();
+              }
+            } else {
+              db.ref('lastOrderDate').set(todayStr);
+            }
+          });
+
           // 即時監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
+            const todayStr = getTodayDateString();
+            if (state.lastOrderDate && state.lastOrderDate !== todayStr) {
+              checkDailyAutoReset();
+              return;
+            }
+
             if (data) {
               state.orders = Array.isArray(data) ? data : Object.values(data);
               sSet('moodfood_orders', JSON.stringify(state.orders));
@@ -1437,7 +1506,6 @@
       let summaryParts = [];
       newItems.forEach(it => {
         newTotal += it.qty * it.price;
-        summaryParts.join('、');
         summaryParts.push(`${it.name} x${it.qty}`);
       });
 
@@ -1543,7 +1611,7 @@
     }
 
     /**************************************************************
-     * 開放狀態判斷邏輯 (加入公休判斷)
+     * 開放狀態判斷邏輯 (加入公休與跨日自動清除判斷)
      **************************************************************/
     function isCurrentlyOpen() {
       const currentDayData = getDayInfo();
@@ -1560,6 +1628,9 @@
     }
 
     function checkTimeAndStatus() {
+      // 檢查是否跨過午夜 24:00
+      checkDailyAutoReset();
+
       const now = new Date();
       const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
       const timeDisplay = document.getElementById('currentTimeDisplay');
@@ -2608,7 +2679,7 @@
       if (soupEl) soupEl.disabled = isChecked;
     }
 
-    // 🌟 防呆取消按鈕：放棄尚未儲存的辨識或修改內容，將欄位復原為原菜單
+    // 防呆取消按鈕：放棄尚未儲存的辨識或修改內容，將欄位復原為原菜單
     function cancelAiParseAndRevert() {
       renderWeeklyEditForm();
       const statusEl = document.getElementById('aiParseStatus');
@@ -2669,7 +2740,7 @@
       showToast('已移除菜單圖片');
     }
 
-    // 🌟 AI 辨識防呆機制：只填入編輯欄位，不覆蓋 state，確認無誤按儲存，若不要可按「取消辨識」復原
+    // AI 辨識防呆機制：只填入編輯欄位，不覆蓋 state，確認無誤按儲存，若不要可按「取消辨識」復原
     async function parseMenuImageWithAI() {
       if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
       const apiKeyInput = document.getElementById('geminiApiKeyInput');
