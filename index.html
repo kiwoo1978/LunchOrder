@@ -580,6 +580,163 @@
         </div>
       </div>
 
+      <!-- 常態每週特選與例湯手動設定 (單一卡片無重複) -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-2">
+          <h2 class="text-xl font-bold mood-green-text flex items-center">
+            <i class="fa-solid fa-calendar-week mr-2 text-emerald-700"></i>本週特選、例湯與公休設定 (手動填寫)
+          </h2>
+          <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
+      </div>
+
+    </div>
+      <!-- 季節性模式設定 -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h2 class="text-xl font-bold mood-green-text flex items-center">
+            <i class="fa-solid fa-arrows-split-up-and-left mr-2 text-emerald-700"></i>季節品項供應設定 (每日例湯 vs 夏季飲品)
+          </h2>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">季節切換</span>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed">
+          牧饗菜單規範「每日例湯」為<b>冬季限定 (10月~4月)</b>，「現打西瓜汁與蜂蜜檸檬」為<b>夏季限定 (5月~9月)</b>。請由下方選擇目前要開放訂購的品項：
+        </p>
+
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="p-3 border-2 rounded-xl flex items-center space-x-2.5 cursor-pointer bg-white transition" id="lblSeasonSoup">
+              <input type="radio" name="seasonMode" value="soup" onchange="handleSeasonChange('soup')" class="text-emerald-700 w-4 h-4">
+              <div>
+                <p class="font-bold text-sm text-gray-800">🥣 僅開放【每日例湯】</p>
+                <p class="text-[11px] text-gray-500">冬季限定 (10月~4月)，隱藏飲品</p>
+              </div>
+            </label>
+
+            <label class="p-3 border-2 rounded-xl flex items-center space-x-2.5 cursor-pointer bg-white transition" id="lblSeasonDrink">
+              <input type="radio" name="seasonMode" value="drink" onchange="handleSeasonChange('drink')" class="text-emerald-700 w-4 h-4">
+              <div>
+                <p class="font-bold text-sm text-gray-800">🍹 僅開放【夏季飲品】</p>
+                <p class="text-[11px] text-gray-500">夏季限定 (5月~9月)，隱藏例湯</p>
+              </div>
+            </label>
+
+            <label class="p-3 border-2 rounded-xl flex items-center space-x-2.5 cursor-pointer bg-white transition" id="lblSeasonNone">
+              <input type="radio" name="seasonMode" value="none" onchange="handleSeasonChange('none')" class="text-emerald-700 w-4 h-4">
+              <div>
+                <p class="font-bold text-sm text-gray-800">❄️ 皆不開放</p>
+                <p class="text-[11px] text-gray-500">例湯與飲品皆暫停供應</p>
+              </div>
+            </label>
+          </div>
+
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-xs text-gray-500" id="currentMonthHint">載入月份中...</span>
+            <button onclick="saveSeasonSettingBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+              儲存季節設定
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 點餐時段設定卡片 -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h2 class="text-xl font-bold mood-green-text">
+            <i class="fa-solid fa-business-time mr-1"></i>每日點餐開放時段設定
+          </h2>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-bold">自動定時開關</span>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+          <div class="flex items-center space-x-3">
+            <input type="checkbox" id="timeLimitEnabled" onchange="updateTimeConfig()" class="w-4 h-4 text-emerald-700 rounded">
+            <label for="timeLimitEnabled" class="text-sm font-bold text-gray-800 cursor-pointer">
+              啟用每日定時開放機制 (取消勾選則全天開放，由管理員手動結單)
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">每天開始點餐時間</label>
+              <input type="time" id="startTimeInput" onchange="updateTimeConfig()" class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">每天截止點餐時間 (自動結單)</label>
+              <input type="time" id="endTimeInput" onchange="updateTimeConfig()" class="w-full border rounded-lg px-3 py-2 text-base font-bold text-gray-800 bg-white">
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 flex justify-between items-center">
+            <span>💡 預設時段：08:30 ～ 10:30</span>
+            <button onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
+              儲存時段設定
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 常規固定餐點編輯管理 -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-emerald-600/30">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-2">
+          <div>
+            <h2 class="text-xl font-bold mood-green-text flex items-center">
+              <i class="fa-solid fa-utensils mr-2 text-emerald-700"></i>常態固定菜單品項管理 (餐盒 / 單點 / 飲品例湯)
+            </h2>
+            <p class="text-xs text-gray-500">可自由調整常態品項的名稱、金額與標籤；完成編輯後請點擊右上方儲存按鈕。</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="saveFixedMenuConfig()" class="mood-green hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition">
+              <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存菜單品項
+            </button>
+          </div>
+        </div>
+
+        <!-- 三大類別編輯表單 -->
+        <div class="space-y-4">
+          <!-- 1. 餐盒編輯 -->
+          <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="font-bold text-sm text-emerald-950 flex items-center">
+                🍱 餐盒品項 (BENTO BOX)
+              </h3>
+              <button onclick="addNewFixedMenuItem('bento')" class="text-xs text-emerald-700 hover:underline font-bold">
+                + 新增餐盒品項
+              </button>
+            </div>
+            <div id="editBentoList" class="space-y-2"></div>
+          </div>
+
+          <!-- 2. 單點編輯 -->
+          <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="font-bold text-sm text-amber-950 flex items-center">
+                🍖 單點品項 (A LA CARTE)
+              </h3>
+              <button onclick="addNewFixedMenuItem('alacarte')" class="text-xs text-amber-700 hover:underline font-bold">
+                + 新增單點品項
+              </button>
+            </div>
+            <div id="editAlaCarteList" class="space-y-2"></div>
+          </div>
+
+          <!-- 3. 飲品/例湯編輯 -->
+          <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="font-bold text-sm text-emerald-950 flex items-center">
+                🥣 飲品 / 例湯品項 (DRINKS & SOUP)
+              </h3>
+              <button onclick="addNewFixedMenuItem('drinkSoup')" class="text-xs text-emerald-700 hover:underline font-bold">
+                + 新增飲品/例湯品項
+              </button>
+            </div>
+            <div id="editDrinkSoupList" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- 常態每週特選菜單照片上傳與手動設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
         <h2 class="text-xl font-bold mood-green-text border-b pb-2">
