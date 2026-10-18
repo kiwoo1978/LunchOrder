@@ -533,7 +533,7 @@
               <p class="text-xs text-gray-500">只需由任一管理員在此儲存一次，即自動同步至 Firebase 雲端，其他設備皆可直接共用！</p>
             </div>
             <div class="flex gap-2">
-              <input type="password" id="geminiApiKeyInput" placeholder="貼上 AIzaSy... 金鑰" 
+              <input type="password" id="geminiApiKeyInput" placeholder="貼上 API 金鑰" 
                 class="border border-emerald-300 rounded px-2.5 py-1.5 text-xs w-full sm:w-64 bg-white">
               <button onclick="saveGeminiKeyAction()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 cursor-pointer">
                 儲存金鑰並同步
@@ -812,7 +812,6 @@
     function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function sSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-    // 取得當前本地 YYYY-MM-DD 日期字串
     function getTodayDateString() {
       const now = new Date();
       const y = now.getFullYear();
@@ -821,29 +820,11 @@
       return `${y}-${m}-${d}`;
     }
 
-    // 同步訂單至 Firebase 雲端與本地
-    function syncOrdersToCloud(ordersList) {
-      sSet('moodfood_orders', JSON.stringify(ordersList));
-      const todayStr = getTodayDateString();
-      state.lastOrderDate = todayStr;
-      sSet('moodfood_last_order_date', todayStr);
-
-      if (db) {
-        db.ref('orders').set(ordersList).catch(err => {
-          console.error("雲端同步訂單失敗:", err);
-        });
-        db.ref('lastOrderDate').set(todayStr).catch(err => {
-          console.error("雲端同步訂單日期失敗:", err);
-        });
-      }
-    }
-
-    // 🌟 跨日（每日 24:00 後）自動重置檢驗
+    // 跨日檢查（只清除資料，不遞迴呼叫 renderAll）
     function checkDailyAutoReset() {
       const todayStr = getTodayDateString();
       const recordDate = state.lastOrderDate || sGet('moodfood_last_order_date');
 
-      // 若記錄的訂單日期存在且不是今天，代表已跨過午夜 24:00
       if (recordDate && recordDate !== todayStr) {
         state.orders = [];
         state.specialQuotaLimit = 5;
@@ -856,9 +837,24 @@
           db.ref('orders').set([]).catch(e => console.error(e));
           db.ref('lastOrderDate').set(todayStr).catch(e => console.error(e));
         }
+        return true;
+      }
+      return false;
+    }
 
-        renderAll();
-        console.log(`[系統提示] 已跨入新的一天 (${todayStr})，系統自動清空前一日訂餐紀錄！`);
+    function syncOrdersToCloud(ordersList) {
+      sSet('moodfood_orders', JSON.stringify(ordersList));
+      const todayStr = getTodayDateString();
+      state.lastOrderDate = todayStr;
+      sSet('moodfood_last_order_date', todayStr);
+
+      if (db) {
+        db.ref('orders').set(ordersList).catch(err => {
+          console.error("雲端同步訂單失敗:", err);
+        });
+        db.ref('lastOrderDate').set(todayStr).catch(err => {
+          console.error("雲端同步日期失敗:", err);
+        });
       }
     }
 
@@ -917,10 +913,8 @@
         const localDate = sGet('moodfood_last_order_date');
         if (localDate) state.lastOrderDate = localDate;
 
-        // 本地跨日檢驗
         checkDailyAutoReset();
 
-        // 讀取本地金鑰做為緩存備案
         const savedKey = sGet('moodfood_shared_gemini_key') || sGet('moodfood_gemini_key');
         if (savedKey) {
           state.globalGeminiApiKey = savedKey;
@@ -959,7 +953,11 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 監聽 Firebase 雲端即時連線、訂單、日期與共享 API Key
+        // 🌟 核心：先做第一次完整的介面繪製與狀態設定，避免停留於「載入中」
+        renderAll();
+        checkTimeAndStatus();
+
+        // 監聽 Firebase 雲端即時連線、訂單、日期與金鑰
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -972,7 +970,7 @@
             }
           });
 
-          // 即時監聽雲端記錄的日期（若跨日則執行清除）
+          // 監聽雲端日期
           db.ref('lastOrderDate').on('value', snapshot => {
             const cloudDate = snapshot.val();
             const todayStr = getTodayDateString();
@@ -980,19 +978,19 @@
               state.lastOrderDate = cloudDate;
               sSet('moodfood_last_order_date', cloudDate);
               if (cloudDate !== todayStr) {
-                checkDailyAutoReset();
+                if (checkDailyAutoReset()) renderAll();
               }
             } else {
               db.ref('lastOrderDate').set(todayStr);
             }
           });
 
-          // 即時監聽訂單
+          // 監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             const todayStr = getTodayDateString();
             if (state.lastOrderDate && state.lastOrderDate !== todayStr) {
-              checkDailyAutoReset();
+              if (checkDailyAutoReset()) renderAll();
               return;
             }
 
@@ -1005,10 +1003,10 @@
             }
             renderAll();
           }, error => {
-            console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
+            console.warn("讀取 Firebase 訂單失敗：", error);
           });
 
-          // 即時監聽全域共享 Gemini API Key
+          // 監聽全域共享 Gemini API Key
           db.ref('settings/geminiApiKey').on('value', snapshot => {
             const cloudKey = snapshot.val();
             if (cloudKey) {
@@ -1026,8 +1024,6 @@
         }
 
         setInterval(checkTimeAndStatus, 1000);
-        checkTimeAndStatus();
-        renderAll();
       } catch (err) {
         console.error("Initialization Error:", err);
       }
@@ -1246,6 +1242,56 @@
       showToast('✅ 常態菜單品項已更新儲存並同步至前台！');
     }
 
+    /**************************************************************
+     * 通用呼叫 Google Gemini API 視覺模型 (支援新版 AQ... 憑證格式)
+     **************************************************************/
+    async function callGeminiVisionAPI(apiKey, promptText, base64Image) {
+      // 支援新版 Key 格式，透過 Header 帶入金鑰驗證
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      
+      const payload = {
+        contents: [{
+          parts: [
+            { text: promptText },
+            {
+              inline_data: {
+                mime_type: "image/jpeg",
+                data: base64Image
+              }
+            }
+          ]
+        }],
+        generationConfig: {
+          response_mime_type: "application/json"
+        }
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        let errDetail = `${response.status} ${response.statusText}`;
+        try {
+          const errJson = await response.json();
+          if (errJson.error && errJson.error.message) {
+            errDetail = errJson.error.message;
+          }
+        } catch (_) {}
+        throw new Error(errDetail);
+      }
+
+      const result = await response.json();
+      const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error("AI 未回傳有效文字");
+      return JSON.parse(rawText);
+    }
+
     function handleFixedMenuImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1296,17 +1342,7 @@
   ]
 }`;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: 'image/jpeg', data: base64Content } }] }],
-                generationConfig: { response_mime_type: "application/json" }
-              })
-            });
-
-            const result = await response.json();
-            const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+            const parsed = await callGeminiVisionAPI(apiKey, promptText, base64Content);
 
             if (parsed.bento && parsed.bento.length > 0) {
               state.fixedMenu.bento = parsed.bento.map((b, i) => ({
@@ -1345,7 +1381,7 @@
           img.src = e.target.result;
         } catch (err) {
           console.error(err);
-          statusEl.textContent = '❌ AI 辨識失敗，請檢查 API Key 是否正確，或直接於下方欄位手動新增與修改。';
+          statusEl.textContent = `❌ AI 辨識失敗：${err.message || '請檢查 API Key 或手動修改'}`;
         }
       };
       reader.readAsDataURL(file);
@@ -1611,7 +1647,7 @@
     }
 
     /**************************************************************
-     * 開放狀態判斷邏輯 (加入公休與跨日自動清除判斷)
+     * 開放狀態判斷邏輯
      **************************************************************/
     function isCurrentlyOpen() {
       const currentDayData = getDayInfo();
@@ -1628,8 +1664,10 @@
     }
 
     function checkTimeAndStatus() {
-      // 檢查是否跨過午夜 24:00
-      checkDailyAutoReset();
+      // 跨日檢驗（如果跨日，則重整畫面）
+      if (checkDailyAutoReset()) {
+        renderAll();
+      }
 
       const now = new Date();
       const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
@@ -1861,7 +1899,7 @@
     }
 
     /**************************************************************
-     * 畫面渲染核心
+     * 畫面渲染核心 (安全單向更新，不遞迴)
      **************************************************************/
     function renderAll() {
       renderHeaderAndBanner();
@@ -1872,7 +1910,6 @@
       renderWeeklyEditForm();
       renderSpecialRosterBox();
       renderFixedMenuEditor();
-      checkTimeAndStatus();
     }
 
     function getDayInfo() {
@@ -2216,6 +2253,7 @@
       state.currentCart = {};
       state.selectedBackupItem = '';
       renderAll();
+      checkTimeAndStatus();
     }
 
     function toggleWeeklyOverview() {
@@ -2740,7 +2778,7 @@
       showToast('已移除菜單圖片');
     }
 
-    // AI 辨識防呆機制：只填入編輯欄位，不覆蓋 state，確認無誤按儲存，若不要可按「取消辨識」復原
+    // AI 辨識防呆機制
     async function parseMenuImageWithAI() {
       if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
       const apiKeyInput = document.getElementById('geminiApiKeyInput');
@@ -2764,16 +2802,8 @@
   "5": {"dateStr": "10/16", "special": "BBQ肩小排", "soup": "薑絲肝連湯", "isClosed": false},
   "6": {"dateStr": "10/17", "special": "店家公休", "soup": "店家公休", "isClosed": true}
 }`;
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: 'image/jpeg', data: base64Content } }] }],
-            generationConfig: { response_mime_type: "application/json" }
-          })
-        });
-        const result = await response.json();
-        const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+        const parsed = await callGeminiVisionAPI(apiKey, promptText, base64Content);
 
         // 防呆填入：僅填入輸入欄位，不覆蓋目前 state 與儲存紀錄
         Object.keys(parsed).forEach(k => {
@@ -2795,7 +2825,8 @@
         if (statusEl) statusEl.textContent = '🔍 AI 辨識內容已暫填入下方欄位，確認請點「儲存本週菜單設定」，若不要請按「取消辨識」！';
         showToast('📋 AI 已填入欄位，請核對後按儲存！');
       } catch (e) {
-        if (statusEl) statusEl.textContent = '❌ 辨識失敗，請檢查 API Key 或手動修改。';
+        console.error(e);
+        if (statusEl) statusEl.textContent = `❌ 辨識失敗：${e.message || '請檢查 API Key 或網路'}`;
       } finally {
         if (btn) btn.disabled = false;
       }
