@@ -803,6 +803,16 @@
       }
     }
 
+    // 🌟 強化防護的 getDayInfo，避免讀取未定義屬性崩潰
+    function getDayInfo() {
+      const day = Number(state.selectedDay) || 1;
+      const dayData = (state.weeklyMenu && state.weeklyMenu[day]) ? state.weeklyMenu[day] : null;
+      if (dayData && dayData.special) {
+        return dayData;
+      }
+      return DEFAULT_WEEKLY_MENU[day] || DEFAULT_WEEKLY_MENU[1];
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       try {
         const todayDay = new Date().getDay();
@@ -819,32 +829,42 @@
         }
 
         const localFixedMenu = sGet('moodfood_fixed_menu_data');
-        if (localFixedMenu) state.fixedMenu = JSON.parse(localFixedMenu);
+        if (localFixedMenu) {
+          try { state.fixedMenu = JSON.parse(localFixedMenu); } catch(e) {}
+        }
 
         const localWeekly = sGet('moodfood_weekly_menu');
         if (localWeekly) {
-          state.weeklyMenu = JSON.parse(localWeekly);
-          Object.keys(state.weeklyMenu).forEach(k => {
-            if (typeof state.weeklyMenu[k].isClosed === 'undefined') {
-              state.weeklyMenu[k].isClosed = false;
-            }
-          });
+          try {
+            const parsedWeekly = JSON.parse(localWeekly);
+            const formatted = {};
+            [1, 2, 3, 4, 5, 6].forEach(k => {
+              formatted[k] = parsedWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+            });
+            state.weeklyMenu = formatted;
+          } catch(e) {}
         }
 
         const localOrders = sGet('moodfood_orders');
-        if (localOrders) state.orders = JSON.parse(localOrders);
+        if (localOrders) {
+          try { state.orders = JSON.parse(localOrders); } catch(e) {}
+        }
 
         const localTodayOpen = sGet('moodfood_is_today_open');
         if (localTodayOpen !== null) state.isTodayOpen = JSON.parse(localTodayOpen);
 
         const localTime = sGet('moodfood_time_config');
-        if (localTime) state.timeLimit = JSON.parse(localTime);
+        if (localTime) {
+          try { state.timeLimit = JSON.parse(localTime); } catch(e) {}
+        }
 
         const localOverride = sGet('moodfood_manual_override');
         if (localOverride) state.manualOverride = localOverride;
 
         const localEmergency = sGet('moodfood_emergency');
-        if (localEmergency) state.emergency = JSON.parse(localEmergency);
+        if (localEmergency) {
+          try { state.emergency = JSON.parse(localEmergency); } catch(e) {}
+        }
 
         const localSeasonMode = sGet('moodfood_season_mode');
         if (localSeasonMode) state.seasonMode = localSeasonMode;
@@ -855,10 +875,8 @@
         const localDate = sGet('moodfood_last_order_date');
         if (localDate) state.lastOrderDate = localDate;
 
-        // 本地跨日檢驗
         checkDailyAutoReset();
 
-        // 載入記住的管理員帳號與密碼
         const rememberCreds = sGet('moodfood_admin_creds');
         if (rememberCreds) {
           try {
@@ -901,7 +919,6 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 監聽 Firebase 雲端即時連線、訂單、菜單與所有設定節點
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -914,7 +931,6 @@
             }
           });
 
-          // 1. 即時監聽雲端記錄的日期（跨日清除）
           db.ref('lastOrderDate').on('value', snapshot => {
             const cloudDate = snapshot.val();
             const todayStr = getTodayDateString();
@@ -929,7 +945,6 @@
             }
           });
 
-          // 2. 即時監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             const todayStr = getTodayDateString();
@@ -950,18 +965,21 @@
             console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
           });
 
-          // 3. 🌟 即時監聽每週特選菜單
+          // 🌟 即時監聽每週特選菜單（容錯陣列與物件）
           db.ref('weeklyMenu').on('value', snapshot => {
             const cloudWeekly = snapshot.val();
             if (cloudWeekly) {
-              state.weeklyMenu = cloudWeekly;
-              sSet('moodfood_weekly_menu', JSON.stringify(cloudWeekly));
-              renderWeeklyEditForm();
+              const formatted = {};
+              [1, 2, 3, 4, 5, 6].forEach(k => {
+                formatted[k] = cloudWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+              });
+              state.weeklyMenu = formatted;
+              sSet('moodfood_weekly_menu', JSON.stringify(formatted));
               renderAll();
             }
           });
 
-          // 4. 🌟 即時監聽常態固定菜單
+          // 🌟 即時監聽常態固定菜單
           db.ref('fixedMenu').on('value', snapshot => {
             const cloudFixedMenu = snapshot.val();
             if (cloudFixedMenu) {
@@ -973,7 +991,7 @@
             }
           });
 
-          // 5. 🌟 即時監聽今日開放總開關
+          // 🌟 即時監聽今日開放總開關
           db.ref('settings/isTodayOpen').on('value', snapshot => {
             const cloudIsOpen = snapshot.val();
             if (cloudIsOpen !== null) {
@@ -984,7 +1002,7 @@
             }
           });
 
-          // 6. 🌟 即時監聽突發狀況設定
+          // 🌟 即時監聽突發狀況設定
           db.ref('settings/emergency').on('value', snapshot => {
             const cloudEmergency = snapshot.val();
             if (cloudEmergency) {
@@ -1005,7 +1023,7 @@
             }
           });
 
-          // 7. 🌟 即時監聽開放時段設定
+          // 🌟 即時監聽開放時段設定
           db.ref('settings/timeLimit').on('value', snapshot => {
             const cloudTime = snapshot.val();
             if (cloudTime) {
@@ -1023,7 +1041,7 @@
             }
           });
 
-          // 8. 🌟 即時監聽季節模式設定 (例湯 vs 飲品)
+          // 🌟 即時監聽季節模式設定
           db.ref('settings/seasonMode').on('value', snapshot => {
             const cloudSeason = snapshot.val();
             if (cloudSeason) {
@@ -1043,7 +1061,7 @@
             }
           });
 
-          // 9. 🌟 即時監聽管理員手動結單/開放狀態
+          // 🌟 即時監聽手動開關
           db.ref('settings/manualOverride').on('value', snapshot => {
             const cloudOverride = snapshot.val();
             state.manualOverride = cloudOverride;
@@ -1158,7 +1176,7 @@
     }
 
     /**************************************************************
-     * 常規固定菜單手動編輯管理 (支援雲端同步)
+     * 常規固定菜單手動編輯管理
      **************************************************************/
     function renderFixedMenuEditor() {
       if (!state.isAdmin) return;
@@ -1658,7 +1676,7 @@
     }
 
     /**************************************************************
-     * 後台緊急、時段與季節控制 (支援雲端同步)
+     * 後台緊急、時段與季節控制
      **************************************************************/
     function setTodaySystemOpen(openStatus) {
       state.isTodayOpen = openStatus;
@@ -1850,18 +1868,6 @@
       checkTimeAndStatus();
     }
 
-    function getDayInfo() {
-      return state.weeklyMenu[state.selectedDay] || DEFAULT_WEEKLY_MENU[1];
-    }
-
-    function getDisplayItemName(item) {
-      if (item.id === 'em_custom') return item.name;
-      const dayInfo = getDayInfo();
-      if (item.isSpecial) return `今日特選飯(${dayInfo.isClosed ? '公休' : dayInfo.special})`;
-      if (item.isSoup) return `每日例湯(${dayInfo.isClosed ? '公休' : dayInfo.soup})`;
-      return item.name;
-    }
-
     function renderHeaderAndBanner() {
       const dayInfo = getDayInfo();
       const stats = getSpecialBentoStats();
@@ -1953,6 +1959,7 @@
       if (overviewGrid) {
         overviewGrid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
           const d = state.weeklyMenu[k];
+          if (!d) return '';
           const isCurrent = Number(k) === Number(state.selectedDay);
           if (d.isClosed) {
             return `
@@ -1972,6 +1979,14 @@
           `;
         }).join('');
       }
+    }
+
+    function getDisplayItemName(item) {
+      if (item.id === 'em_custom') return item.name;
+      const dayInfo = getDayInfo();
+      if (item.isSpecial) return `今日特選飯(${dayInfo.isClosed ? '公休' : dayInfo.special})`;
+      if (item.isSoup) return `每日例湯(${dayInfo.isClosed ? '公休' : dayInfo.soup})`;
+      return item.name;
     }
 
     function renderMenuCard(item) {
@@ -2602,14 +2617,14 @@
     }
 
     /**************************************************************
-     * 每週特選菜單手動編輯 (支援雲端同步)
+     * 每週特選菜單手動編輯
      **************************************************************/
     function renderWeeklyEditForm() {
       if (!state.isAdmin) return;
       const grid = document.getElementById('weeklyEditFormGrid');
       if (!grid) return;
-      grid.innerHTML = Object.keys(state.weeklyMenu).map(k => {
-        const d = state.weeklyMenu[k];
+      grid.innerHTML = [1, 2, 3, 4, 5, 6].map(k => {
+        const d = (state.weeklyMenu && state.weeklyMenu[k]) ? state.weeklyMenu[k] : DEFAULT_WEEKLY_MENU[k];
         const isClosed = !!d.isClosed;
         return `
           <div class="p-3 rounded-xl border space-y-2 transition ${isClosed ? 'bg-red-50/70 border-red-300' : 'bg-gray-50 border-gray-200'}">
@@ -2644,18 +2659,24 @@
     }
 
     function saveWeeklyConfig() {
-      Object.keys(state.weeklyMenu).forEach(k => {
+      const newMenu = {};
+      [1, 2, 3, 4, 5, 6].forEach(k => {
         const dateEl = document.getElementById(`edit_date_${k}`);
         const specialEl = document.getElementById(`edit_special_${k}`);
         const soupEl = document.getElementById(`edit_soup_${k}`);
         const closedEl = document.getElementById(`edit_closed_${k}`);
+        const defaultDay = DEFAULT_WEEKLY_MENU[k];
 
-        if (dateEl) state.weeklyMenu[k].dateStr = dateEl.value.trim() || state.weeklyMenu[k].dateStr;
-        if (specialEl) state.weeklyMenu[k].special = specialEl.value.trim() || '特選主菜';
-        if (soupEl) state.weeklyMenu[k].soup = soupEl.value.trim() || '每日例湯';
-        if (closedEl) state.weeklyMenu[k].isClosed = closedEl.checked;
+        newMenu[k] = {
+          dayLabel: defaultDay.dayLabel,
+          dateStr: (dateEl && dateEl.value.trim()) ? dateEl.value.trim() : (state.weeklyMenu[k]?.dateStr || defaultDay.dateStr),
+          special: (specialEl && specialEl.value.trim()) ? specialEl.value.trim() : (state.weeklyMenu[k]?.special || defaultDay.special),
+          soup: (soupEl && soupEl.value.trim()) ? soupEl.value.trim() : (state.weeklyMenu[k]?.soup || defaultDay.soup),
+          isClosed: closedEl ? closedEl.checked : (state.weeklyMenu[k]?.isClosed || false)
+        };
       });
 
+      state.weeklyMenu = newMenu;
       sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
 
       if (db) {
