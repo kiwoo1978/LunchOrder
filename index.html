@@ -47,7 +47,7 @@
         <span id="orderStatusBadge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500 text-white">
           檢查中...
         </span>
-        <button onclick="toggleAdminModal()" id="adminBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1">
+        <button onclick="toggleAdminModal()" id="adminBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center space-x-1 cursor-pointer">
           <i class="fa-solid fa-user-shield"></i>
           <span id="adminBtnText">管理員登入</span>
         </button>
@@ -57,16 +57,16 @@
     <!-- 管理員切換分頁列 -->
     <div id="adminNavTabs" class="hidden bg-emerald-950/80 border-t border-emerald-800">
       <div class="max-w-4xl mx-auto px-4 flex space-x-1 py-1.5">
-        <button onclick="switchView('order')" id="tabOrder" class="flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow">
+        <button onclick="switchView('order')" id="tabOrder" class="flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow cursor-pointer">
           <i class="fa-solid fa-utensils mr-1"></i> 我要點餐 (前台)
         </button>
-        <button onclick="switchView('dashboard')" id="tabDashboard" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10">
+        <button onclick="switchView('dashboard')" id="tabDashboard" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10 cursor-pointer">
           <i class="fa-solid fa-clipboard-list mr-1"></i> 訂單統計與匯出 (<span id="navOrderCount">0</span>)
         </button>
-        <button onclick="switchView('weekly')" id="tabWeekly" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10">
+        <button onclick="switchView('weekly')" id="tabWeekly" class="flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10 cursor-pointer">
           <i class="fa-solid fa-sliders mr-1"></i> 供餐規則與菜單設定
         </button>
-        <button onclick="logoutAdmin()" class="px-3 py-1.5 text-sm font-medium rounded text-red-300 hover:bg-red-900/40" title="登出管理員">
+        <button onclick="logoutAdmin()" class="px-3 py-1.5 text-sm font-medium rounded text-red-300 hover:bg-red-900/40 cursor-pointer" title="登出管理員">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
@@ -143,7 +143,7 @@
                 </div>
                 <p class="text-lg font-bold text-amber-950 mt-1" id="bannerSpecialName">載入中...</p>
               </div>
-              <button onclick="quickAddSpecial()" id="btnQuickAddSpecial" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
+              <button onclick="quickAddSpecial()" id="btnQuickAddSpecial" class="bg-amber-700 hover:bg-amber-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer">
                 +1 點選
               </button>
             </div>
@@ -153,22 +153,19 @@
                 <span class="text-xs font-bold px-2 py-0.5 rounded mood-green text-white">每日例湯 $40</span>
                 <p class="text-lg font-bold text-emerald-950 mt-1" id="bannerSoupName">載入中...</p>
               </div>
-              <button onclick="quickAddSoup()" id="btnQuickAddSoup" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn">
+              <button onclick="quickAddSoup()" id="btnQuickAddSoup" class="mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer">
                 +1 點選
               </button>
             </div>
           </div>
 
           <div class="mt-3 text-right">
-            <button onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium">
+            <button onclick="toggleWeeklyOverview()" class="text-xs text-emerald-800 hover:underline font-medium cursor-pointer">
               <i class="fa-regular fa-calendar-check mr-1"></i>展開查看「本週特選與例湯一覽表」
             </button>
           </div>
 
           <div id="weeklyOverviewPanel" class="hidden mt-3 pt-3 border-t border-gray-200">
-            <div id="weeklyImagePreviewFront" class="mb-3 hidden">
-              <img id="frontMenuImg" src="" alt="當週菜單" class="max-h-72 mx-auto rounded-lg border shadow-sm">
-            </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center text-xs" id="weeklyOverviewGrid"></div>
           </div>
         </div>
@@ -269,10 +266,10 @@
             <p class="text-xs text-gray-500 mt-0.5" id="adminCurrentStatusHint">載入狀態中...</p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button onclick="toggleManualOverride()" id="btnManualOverride" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition">
+            <button onclick="toggleManualOverride()" id="btnManualOverride" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer">
               切換狀態
             </button>
-            <button onclick="clearAllOrders()" class="px-4 py-2 rounded-lg text-sm font-bold text-red-700 bg-red-100 hover:bg-red-200 transition">
+            <button onclick="clearAllOrders()" class="px-4 py-2 rounded-lg text-sm font-bold text-red-700 bg-red-100 hover:bg-red-200 transition cursor-pointer">
               <i class="fa-solid fa-trash-can mr-1"></i> 清空今日所有訂單
             </button>
           </div>
@@ -304,7 +301,7 @@
             <p class="text-xs text-gray-600">若廠商告知特餐缺料、售完或配額減少（如 5 個改為 2 個），可在此直接調整並替換同仁餐點：</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <button onclick="setSpecialQuota(0)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+            <button onclick="setSpecialQuota(0)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">
               宣告全數售完 (配額改0)
             </button>
           </div>
@@ -314,7 +311,7 @@
           <span class="font-bold text-gray-700">今日特餐實際供應上限：</span>
           <input type="number" id="inputSpecialQuota" min="0" max="20" class="w-16 border rounded px-2 py-1 text-center font-bold bg-white text-sm" onchange="changeSpecialQuota(this.value)">
           <span class="text-gray-500">份 (預設5份，調低後超過順位的同仁會自動標記需轉備案)</span>
-          <button onclick="changeSpecialQuota(document.getElementById('inputSpecialQuota').value)" class="bg-emerald-800 text-white px-3 py-1 rounded font-bold">
+          <button onclick="changeSpecialQuota(document.getElementById('inputSpecialQuota').value)" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-1 rounded font-bold cursor-pointer">
             更新配額
           </button>
         </div>
@@ -331,7 +328,7 @@
             </h3>
             <p class="text-xs text-gray-500">選擇匯出格式後，點擊右方按鈕即可一鍵複製文字</p>
           </div>
-          <button onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center justify-center">
+          <button onclick="copyExportText()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center justify-center cursor-pointer">
             <i class="fa-regular fa-copy mr-1.5"></i> 一鍵複製文字
           </button>
         </div>
@@ -395,10 +392,10 @@
             <p class="text-xs text-gray-500 mt-0.5">若設為「不開放」，即使在時段內同仁也無法點餐；若設為「開放」，則遵循設定時段。</p>
           </div>
           <div class="flex items-center space-x-2 shrink-0">
-            <button onclick="setTodaySystemOpen(true)" id="btnOpenSystemYes" class="px-4 py-2 rounded-lg font-bold text-xs transition">
+            <button onclick="setTodaySystemOpen(true)" id="btnOpenSystemYes" class="px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer">
               <i class="fa-solid fa-check mr-1"></i>今日開放訂餐
             </button>
-            <button onclick="setTodaySystemOpen(false)" id="btnOpenSystemNo" class="px-4 py-2 rounded-lg font-bold text-xs transition">
+            <button onclick="setTodaySystemOpen(false)" id="btnOpenSystemNo" class="px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer">
               <i class="fa-solid fa-ban mr-1"></i>今日暫停/不開放
             </button>
           </div>
@@ -429,7 +426,7 @@
               <input type="text" id="emergencyNoticeInput" value="今日因特殊狀況，常態餐盒、單點主菜與例湯暫停供應，僅提供特製客製化便當！" class="w-full border rounded-lg px-3 py-1.5 text-xs bg-white">
             </div>
             <div class="sm:col-span-2 text-right">
-              <button onclick="saveEmergencyConfig()" class="bg-amber-700 hover:bg-amber-800 text-white px-5 py-2 rounded-lg text-xs font-bold transition shadow">
+              <button onclick="saveEmergencyConfig()" class="bg-amber-700 hover:bg-amber-800 text-white px-5 py-2 rounded-lg text-xs font-bold transition shadow cursor-pointer">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存突發狀況設定並套用
               </button>
             </div>
@@ -478,7 +475,7 @@
 
           <div class="flex justify-between items-center pt-2">
             <span class="text-xs text-gray-500" id="currentMonthHint">載入月份中...</span>
-            <button onclick="saveSeasonSettingBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+            <button onclick="saveSeasonSettingBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer">
               儲存季節設定
             </button>
           </div>
@@ -514,7 +511,7 @@
           </div>
           <div class="text-xs text-gray-500 flex justify-between items-center">
             <span>💡 預設時段：08:30 ～ 10:30</span>
-            <button onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition">
+            <button onclick="saveTimeConfigBtn()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">
               儲存時段設定
             </button>
           </div>
@@ -531,7 +528,7 @@
             <p class="text-xs text-gray-500">可自由調整常態品項的名稱、金額與標籤；完成編輯後請點擊右上方儲存按鈕。</p>
           </div>
           <div class="flex gap-2">
-            <button onclick="saveFixedMenuConfig()" class="mood-green hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition">
+            <button onclick="saveFixedMenuConfig()" class="mood-green hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition cursor-pointer">
               <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存菜單品項
             </button>
           </div>
@@ -545,7 +542,7 @@
               <h3 class="font-bold text-sm text-emerald-950 flex items-center">
                 🍱 餐盒品項 (BENTO BOX)
               </h3>
-              <button onclick="addNewFixedMenuItem('bento')" class="text-xs text-emerald-700 hover:underline font-bold">
+              <button onclick="addNewFixedMenuItem('bento')" class="text-xs text-emerald-700 hover:underline font-bold cursor-pointer">
                 + 新增餐盒品項
               </button>
             </div>
@@ -558,7 +555,7 @@
               <h3 class="font-bold text-sm text-amber-950 flex items-center">
                 🍖 單點品項 (A LA CARTE)
               </h3>
-              <button onclick="addNewFixedMenuItem('alacarte')" class="text-xs text-amber-700 hover:underline font-bold">
+              <button onclick="addNewFixedMenuItem('alacarte')" class="text-xs text-amber-700 hover:underline font-bold cursor-pointer">
                 + 新增單點品項
               </button>
             </div>
@@ -571,7 +568,7 @@
               <h3 class="font-bold text-sm text-emerald-950 flex items-center">
                 🥣 飲品 / 例湯品項 (DRINKS & SOUP)
               </h3>
-              <button onclick="addNewFixedMenuItem('drinkSoup')" class="text-xs text-emerald-700 hover:underline font-bold">
+              <button onclick="addNewFixedMenuItem('drinkSoup')" class="text-xs text-emerald-700 hover:underline font-bold cursor-pointer">
                 + 新增飲品/例湯品項
               </button>
             </div>
@@ -611,10 +608,10 @@
             </div>
           </div>
         </div>
-        <button onclick="resetCurrentSelection()" class="text-xs text-gray-400 hover:text-red-600 underline sm:ml-4">清空重選</button>
+        <button onclick="resetCurrentSelection()" class="text-xs text-gray-400 hover:text-red-600 underline sm:ml-4 cursor-pointer">清空重選</button>
       </div>
 
-      <button onclick="submitOrder()" id="btnSubmitOrder" class="w-full sm:w-auto mood-green hover:bg-emerald-800 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+      <button onclick="submitOrder()" id="btnSubmitOrder" class="w-full sm:w-auto mood-green hover:bg-emerald-800 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer">
         <i class="fa-solid fa-paper-plane"></i>
         <span>送出便當訂單</span>
       </button>
@@ -788,7 +785,6 @@
       const todayStr = getTodayDateString();
       const recordDate = state.lastOrderDate || sGet('moodfood_last_order_date');
 
-      // 若記錄的訂單日期存在且不是今天，代表已跨過午夜 24:00
       if (recordDate && recordDate !== todayStr) {
         state.orders = [];
         state.specialQuotaLimit = 5;
@@ -905,7 +901,7 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
-        // 監聽 Firebase 雲端即時連線、訂單與日期
+        // 監聽 Firebase 雲端即時連線、訂單、菜單與所有設定節點
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -918,7 +914,7 @@
             }
           });
 
-          // 即時監聽雲端記錄的日期（若跨日則執行清除）
+          // 1. 即時監聽雲端記錄的日期（跨日清除）
           db.ref('lastOrderDate').on('value', snapshot => {
             const cloudDate = snapshot.val();
             const todayStr = getTodayDateString();
@@ -933,7 +929,7 @@
             }
           });
 
-          // 即時監聽訂單
+          // 2. 即時監聽訂單
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             const todayStr = getTodayDateString();
@@ -952,6 +948,107 @@
             renderAll();
           }, error => {
             console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
+          });
+
+          // 3. 🌟 即時監聽每週特選菜單
+          db.ref('weeklyMenu').on('value', snapshot => {
+            const cloudWeekly = snapshot.val();
+            if (cloudWeekly) {
+              state.weeklyMenu = cloudWeekly;
+              sSet('moodfood_weekly_menu', JSON.stringify(cloudWeekly));
+              renderWeeklyEditForm();
+              renderAll();
+            }
+          });
+
+          // 4. 🌟 即時監聽常態固定菜單
+          db.ref('fixedMenu').on('value', snapshot => {
+            const cloudFixedMenu = snapshot.val();
+            if (cloudFixedMenu) {
+              state.fixedMenu = cloudFixedMenu;
+              sSet('moodfood_fixed_menu_data', JSON.stringify(cloudFixedMenu));
+              renderFixedMenuEditor();
+              renderBackupSelectOptions();
+              renderAll();
+            }
+          });
+
+          // 5. 🌟 即時監聽今日開放總開關
+          db.ref('settings/isTodayOpen').on('value', snapshot => {
+            const cloudIsOpen = snapshot.val();
+            if (cloudIsOpen !== null) {
+              state.isTodayOpen = cloudIsOpen;
+              sSet('moodfood_is_today_open', JSON.stringify(cloudIsOpen));
+              updateTodayOpenBtnUI();
+              checkTimeAndStatus();
+            }
+          });
+
+          // 6. 🌟 即時監聽突發狀況設定
+          db.ref('settings/emergency').on('value', snapshot => {
+            const cloudEmergency = snapshot.val();
+            if (cloudEmergency) {
+              state.emergency = cloudEmergency;
+              sSet('moodfood_emergency', JSON.stringify(cloudEmergency));
+
+              const emCheck = document.getElementById('emergencyModeCheckbox');
+              if (emCheck) emCheck.checked = cloudEmergency.enabled;
+              const emName = document.getElementById('emergencyItemName');
+              if (emName) emName.value = cloudEmergency.name;
+              const emPrice = document.getElementById('emergencyItemPrice');
+              if (emPrice) emPrice.value = cloudEmergency.price;
+              const emNotice = document.getElementById('emergencyNoticeInput');
+              if (emNotice) emNotice.value = cloudEmergency.notice;
+
+              updateEmergencyUI();
+              renderAll();
+            }
+          });
+
+          // 7. 🌟 即時監聽開放時段設定
+          db.ref('settings/timeLimit').on('value', snapshot => {
+            const cloudTime = snapshot.val();
+            if (cloudTime) {
+              state.timeLimit = cloudTime;
+              sSet('moodfood_time_config', JSON.stringify(cloudTime));
+
+              const timeLimitCheck = document.getElementById('timeLimitEnabled');
+              if (timeLimitCheck) timeLimitCheck.checked = !!cloudTime.enabled;
+              const startTimeInput = document.getElementById('startTimeInput');
+              if (startTimeInput && cloudTime.startTime) startTimeInput.value = cloudTime.startTime;
+              const endTimeInput = document.getElementById('endTimeInput');
+              if (endTimeInput && cloudTime.endTime) endTimeInput.value = cloudTime.endTime;
+
+              checkTimeAndStatus();
+            }
+          });
+
+          // 8. 🌟 即時監聽季節模式設定 (例湯 vs 飲品)
+          db.ref('settings/seasonMode').on('value', snapshot => {
+            const cloudSeason = snapshot.val();
+            if (cloudSeason) {
+              state.seasonMode = cloudSeason;
+              sSet('moodfood_season_mode', cloudSeason);
+
+              if (cloudSeason === 'soup') {
+                delete state.currentCart['d2']; delete state.currentCart['d3'];
+              } else if (cloudSeason === 'drink') {
+                delete state.currentCart['d1'];
+              } else {
+                delete state.currentCart['d1']; delete state.currentCart['d2']; delete state.currentCart['d3'];
+              }
+
+              renderSeasonRadioUI();
+              renderAll();
+            }
+          });
+
+          // 9. 🌟 即時監聽管理員手動結單/開放狀態
+          db.ref('settings/manualOverride').on('value', snapshot => {
+            const cloudOverride = snapshot.val();
+            state.manualOverride = cloudOverride;
+            sSet('moodfood_manual_override', cloudOverride || '');
+            checkTimeAndStatus();
           });
         }
 
@@ -1013,7 +1110,6 @@
       if (u === 'admin' && p === 'tiac123456') {
         state.isAdmin = true;
 
-        // 儲存或清除記住的登入資訊
         if (isRemember) {
           sSet('moodfood_admin_creds', JSON.stringify({ u, p }));
         } else {
@@ -1050,10 +1146,10 @@
         const tab = document.getElementById('tab' + v.charAt(0).toUpperCase() + v.slice(1));
         if (v === viewName) {
           if (el) el.classList.remove('hidden');
-          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow';
+          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded bg-white text-emerald-900 shadow cursor-pointer';
         } else {
           if (el) el.classList.add('hidden');
-          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10';
+          if (tab) tab.className = 'flex-1 py-1.5 text-sm font-medium rounded text-emerald-100 hover:bg-white/10 cursor-pointer';
         }
       });
       const bottomBar = document.getElementById('bottomCartBar');
@@ -1062,7 +1158,7 @@
     }
 
     /**************************************************************
-     * 常規固定菜單手動編輯管理
+     * 常規固定菜單手動編輯管理 (支援雲端同步)
      **************************************************************/
     function renderFixedMenuEditor() {
       if (!state.isAdmin) return;
@@ -1155,7 +1251,15 @@
         return;
       }
       state.fixedMenu[category].splice(idx, 1);
+      sSet('moodfood_fixed_menu_data', JSON.stringify(state.fixedMenu));
+
+      if (db) {
+        db.ref('fixedMenu').set(state.fixedMenu).catch(e => console.error(e));
+      }
+
       renderFixedMenuEditor();
+      renderBackupSelectOptions();
+      renderAll();
     }
 
     function saveFixedMenuConfig() {
@@ -1186,9 +1290,20 @@
       });
 
       sSet('moodfood_fixed_menu_data', JSON.stringify(state.fixedMenu));
+
+      if (db) {
+        db.ref('fixedMenu').set(state.fixedMenu).then(() => {
+          showToast('✅ 常態菜單品項已同步至雲端，全員即時更新！');
+        }).catch(err => {
+          console.error("雲端同步常態菜單失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast('✅ 常態菜單品項已更新儲存！');
+      }
+
       renderBackupSelectOptions();
       renderAll();
-      showToast('✅ 常態菜單品項已更新儲存並同步至前台！');
     }
 
     /**************************************************************
@@ -1444,7 +1559,6 @@
     }
 
     function checkTimeAndStatus() {
-      // 檢查是否跨過午夜 24:00
       checkDailyAutoReset();
 
       const now = new Date();
@@ -1544,11 +1658,18 @@
     }
 
     /**************************************************************
-     * 後台緊急與季節控制
+     * 後台緊急、時段與季節控制 (支援雲端同步)
      **************************************************************/
     function setTodaySystemOpen(openStatus) {
       state.isTodayOpen = openStatus;
       sSet('moodfood_is_today_open', JSON.stringify(state.isTodayOpen));
+
+      if (db) {
+        db.ref('settings/isTodayOpen').set(openStatus).catch(err => {
+          console.error("雲端同步開放狀態失敗:", err);
+        });
+      }
+
       updateTodayOpenBtnUI();
       checkTimeAndStatus();
       showToast(openStatus ? '✅ 已設定今日為【開放訂餐日】(依時段開放)' : '⛔ 已設定今日為【暫停訂餐日】(全天不開放)');
@@ -1559,11 +1680,11 @@
       const btnNo = document.getElementById('btnOpenSystemNo');
       if (btnYes && btnNo) {
         if (state.isTodayOpen) {
-          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow';
-          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white shadow cursor-pointer';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
         } else {
-          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300';
-          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow';
+          btnYes.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer';
+          btnNo.className = 'px-4 py-2 rounded-lg font-bold text-xs bg-red-600 text-white shadow cursor-pointer';
         }
       }
     }
@@ -1585,9 +1706,20 @@
 
       sSet('moodfood_emergency', JSON.stringify(state.emergency));
       state.currentCart = {};
+
+      if (db) {
+        db.ref('settings/emergency').set(state.emergency).then(() => {
+          showToast(state.emergency.enabled ? '🚨 突發狀況模式已同步至雲端啟動！' : '✅ 突發狀況已關閉並同步至雲端，恢復常態菜單');
+        }).catch(err => {
+          console.error("雲端同步突發狀況失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast(state.emergency.enabled ? '🚨 突發狀況模式已啟動！已切換為客製化便當菜單' : '✅ 突發狀況模式已關閉，已恢復常態菜單');
+      }
+
       updateEmergencyUI();
       renderAll();
-      showToast(state.emergency.enabled ? '🚨 突發狀況模式已啟動！已切換為客製化便當菜單' : '✅ 突發狀況模式已關閉，已恢復常態菜單');
     }
 
     function updateEmergencyUI() {
@@ -1636,6 +1768,7 @@
 
     function saveSeasonSettingBtn() {
       sSet('moodfood_season_mode', state.seasonMode);
+      
       if (state.seasonMode === 'soup') {
         delete state.currentCart['d2']; delete state.currentCart['d3'];
       } else if (state.seasonMode === 'drink') {
@@ -1643,8 +1776,24 @@
       } else {
         delete state.currentCart['d1']; delete state.currentCart['d2']; delete state.currentCart['d3'];
       }
+
+      if (db) {
+        db.ref('settings/seasonMode').set(state.seasonMode).then(() => {
+          const msg = state.seasonMode === 'soup' 
+            ? '🥣 已同步至雲端：【冬季限定：僅開放每日例湯】' 
+            : state.seasonMode === 'drink' 
+              ? '🍹 已同步至雲端：【夏季限定：僅開放冷飲】' 
+              : '❄️ 已同步至雲端：【例湯與飲品皆關閉】';
+          showToast(msg);
+        }).catch(err => {
+          console.error("雲端同步季節設定失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast(state.seasonMode === 'soup' ? '🥣 已設定為【冬季限定：僅開放每日例湯】' : state.seasonMode === 'drink' ? '🍹 已設定為【夏季限定：僅開放冷飲】' : '❄️ 已設定為【例湯與飲品皆關閉】');
+      }
+
       renderAll();
-      showToast(state.seasonMode === 'soup' ? '🥣 已設定為【冬季限定：僅開放每日例湯】' : state.seasonMode === 'drink' ? '🍹 已設定為【夏季限定：僅開放冷飲】' : '❄️ 已設定為【例湯與飲品皆關閉】');
     }
 
     function updateTimeConfig() {
@@ -1660,20 +1809,30 @@
 
     function saveTimeConfigBtn() {
       updateTimeConfig();
-      showToast('⏰ 訂餐時段設定已儲存生效！');
+
+      if (db) {
+        db.ref('settings/timeLimit').set(state.timeLimit).then(() => {
+          showToast('⏰ 訂餐時段設定已同步至雲端，全員即時生效！');
+        }).catch(err => {
+          console.error("雲端同步時段設定失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast('⏰ 訂餐時段設定已儲存生效！');
+      }
     }
 
     function toggleManualOverride() {
       const open = isCurrentlyOpen();
-      if (open) {
-        state.manualOverride = 'closed';
-        showToast('🔒 管理員已手動結單！');
-      } else {
-        state.manualOverride = 'open';
-        showToast('🔓 管理員已手動開放點餐！');
-      }
+      state.manualOverride = open ? 'closed' : 'open';
       sSet('moodfood_manual_override', state.manualOverride);
+
+      if (db) {
+        db.ref('settings/manualOverride').set(state.manualOverride).catch(e => console.error(e));
+      }
+
       checkTimeAndStatus();
+      showToast(open ? '🔒 管理員已手動結單！' : '🔓 管理員已手動開放點餐！');
     }
 
     /**************************************************************
@@ -2443,7 +2602,7 @@
     }
 
     /**************************************************************
-     * 每週特選菜單手動編輯
+     * 每週特選菜單手動編輯 (支援雲端同步)
      **************************************************************/
     function renderWeeklyEditForm() {
       if (!state.isAdmin) return;
@@ -2496,9 +2655,21 @@
         if (soupEl) state.weeklyMenu[k].soup = soupEl.value.trim() || '每日例湯';
         if (closedEl) state.weeklyMenu[k].isClosed = closedEl.checked;
       });
+
       sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
+
+      if (db) {
+        db.ref('weeklyMenu').set(state.weeklyMenu).then(() => {
+          showToast('✅ 本週特選菜單已同步至雲端，全員皆已更新！');
+        }).catch(err => {
+          console.error("雲端同步菜單失敗:", err);
+          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+        });
+      } else {
+        showToast('✅ 本週特選、例湯與公休設定已儲存！');
+      }
+
       renderAll();
-      showToast('✅ 本週特選、例湯與公休設定已儲存！');
     }
 
     function showToast(msg) {
