@@ -347,7 +347,7 @@
             <span class="text-red-700 font-bold">僅列未付與待補差額 (催繳用)</span>
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-800 font-bold">
+            <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
             <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
         </div>
@@ -712,16 +712,12 @@
 
   <script>
     /**************************************************************
-     * 自動輪替調用 Google Gemini API (支援新版金鑰與多模型自動備援)
+     * AI 視覺辨識模型調用函式 (支援新版 AQ... 金鑰並使用通用端點)
      **************************************************************/
     async function callGeminiVisionAPI(apiKey, promptText, base64Image) {
-      // 依序嘗試目前支援視覺的模型清單
-      const candidateModels = [
-        'gemini-2.0-flash',
-        'gemini-2.5-flash',
-        'gemini-1.5-flash-latest'
-      ];
-
+      // 支援新版 Key 格式，透過 Header 帶入認證
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
+      
       const payload = {
         contents: [{
           parts: [
@@ -739,54 +735,132 @@
         }
       };
 
-      let lastError = null;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify(payload)
+      });
 
-      for (const modelName of candidateModels) {
+      if (!response.ok) {
+        let errDetail = `${response.status} ${response.statusText}`;
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
-          
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawText) {
-              return JSON.parse(rawText);
-            }
-          } else {
-            let errDetail = `${response.status} ${response.statusText}`;
-            try {
-              const errJson = await response.json();
-              if (errJson.error && errJson.error.message) {
-                errDetail = errJson.error.message;
-              }
-            } catch (_) {}
-            lastError = new Error(errDetail);
-            // 若為模型名稱不支援 (404/not found)，則繼續嘗試下一個備援模型
-            if (!errDetail.includes("not found") && !errDetail.includes("404")) {
-              throw lastError;
-            }
+          const errJson = await response.json();
+          if (errJson.error && errJson.error.message) {
+            errDetail = errJson.error.message;
           }
-        } catch (e) {
-          lastError = e;
-          if (!e.message.includes("not found") && !e.message.includes("404")) {
-            throw e;
-          }
-        }
+        } catch (_) {}
+        throw new Error(errDetail);
       }
 
-      throw lastError || new Error("無法連接 Gemini 辨識服務，請確認 API 金鑰與網路狀態！");
+      const result = await response.json();
+      const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error("AI 未回傳有效文字");
+      return JSON.parse(rawText);
     }
 
     /**************************************************************
-     * AI 辨識：每週特選與例湯
+     * AI 辨識：常態固定菜單品項
+     **************************************************************/
+    function handleFixedMenuImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const apiKey = state.globalGeminiApiKey || document.getElementById('geminiApiKeyInput')?.value.trim();
+      if (!apiKey) {
+        alert('請先在上方填入並儲存 Google Gemini API Key，才能使用 AI 照片自動辨識功能！');
+        return;
+      }
+
+      const statusEl = document.getElementById('fixedMenuAiStatus');
+      statusEl.textContent = '⏳ 正在讀取常態菜單照片並呼叫 AI 解析餐盒與單點品項，請稍候...';
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const img = new Image();
+          img.onload = async function() {
+            const canvas = document.createElement('canvas');
+            const maxDim = 1200;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+              else { w = Math.round(w * maxDim / h); h = maxDim; }
+            }
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const base64Content = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+            const promptText = `請辨識這張便當店常態菜單照片，擷取三個類別的餐點品項與價格：
+1. 餐盒類 (BENTO BOX): 包含品項名稱、價格、是否有標籤(例如:推薦、NEW!、限量)。請務必保留「今日特選飯」。
+2. 單點類 (A LA CARTE): 包含品項名稱、價格。
+3. 飲品/例湯類 (DRINKS & SOUP): 包含品項名稱、價格。
+
+請嚴格只回傳 JSON 格式如下：
+{
+  "bento": [
+    {"name": "今日特選飯", "price": 90, "tag": "限量"},
+    {"name": "醬燒雞腿飯", "price": 110, "tag": "推薦"}
+  ],
+  "alacarte": [
+    {"name": "醬燒雞腿(單點)", "price": 80}
+  ],
+  "drinkSoup": [
+    {"name": "每日例湯", "price": 40, "isSoup": true},
+    {"name": "新鮮現打西瓜汁", "price": 40, "isSummerDrink": true}
+  ]
+}`;
+
+            const parsed = await callGeminiVisionAPI(apiKey, promptText, base64Content);
+
+            if (parsed.bento && parsed.bento.length > 0) {
+              state.fixedMenu.bento = parsed.bento.map((b, i) => ({
+                id: i === 0 ? 'b1' : 'b_' + i + '_' + Date.now(),
+                name: b.name,
+                price: Number(b.price) || 100,
+                tag: b.tag || '',
+                tagType: b.tag === '推薦' ? 'badge-rec' : b.tag === 'NEW!' ? 'badge-new' : b.tag ? 'badge-limit' : '',
+                isSpecial: i === 0
+              }));
+            }
+            if (parsed.alacarte && parsed.alacarte.length > 0) {
+              state.fixedMenu.alacarte = parsed.alacarte.map((a, i) => ({
+                id: 'a_' + i + '_' + Date.now(),
+                name: a.name,
+                price: Number(a.price) || 70
+              }));
+            }
+            if (parsed.drinkSoup && parsed.drinkSoup.length > 0) {
+              state.fixedMenu.drinkSoup = parsed.drinkSoup.map((d, i) => ({
+                id: 'd_' + i + '_' + Date.now(),
+                name: d.name,
+                price: Number(d.price) || 40,
+                isSoup: d.isSoup || d.name.includes('湯'),
+                isSummerDrink: d.isSummerDrink || !d.name.includes('湯')
+              }));
+            }
+
+            sSet('moodfood_fixed_menu_data', JSON.stringify(state.fixedMenu));
+            renderFixedMenuEditor();
+            renderBackupSelectOptions();
+            renderAll();
+            statusEl.textContent = '🎉 AI 自動辨識菜單成功！已更新常態餐點品項表格，確認無誤可點擊儲存！';
+            showToast('✅ 常態菜單 AI 辨識載入完成！');
+          };
+          img.src = e.target.result;
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = `❌ AI 辨識失敗：${err.message || '請檢查 API Key 或網路'}`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /**************************************************************
+     * AI 辨識：每週特選與每日例湯
      **************************************************************/
     async function parseMenuImageWithAI() {
       if (!state.weeklyImageBase64) return alert('請先上傳圖片！');
