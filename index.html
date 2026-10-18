@@ -586,22 +586,22 @@
           <i class="fa-solid fa-calendar-week mr-1"></i>一週特選與每日例湯照片與菜單設定
         </h2>
 
-        <div class="border-2 border-dashed border-emerald-700/40 rounded-xl p-5 text-center bg-amber-50/30">
-          <input type="file" id="weeklyImageInput" accept="image/*" class="hidden" onchange="handleWeeklyImageUpload(event)">
-          <label for="weeklyImageInput" class="cursor-pointer inline-flex items-center px-4 py-2 mood-green text-white rounded-lg text-sm font-bold shadow hover:bg-emerald-800 transition">
-            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> 選擇當週特選菜單圖片上傳
-          </label>
-          <p class="text-xs text-gray-500 mt-2">上傳後將直接自動更新菜單圖片，供前台同仁查閱參考</p>
-
-          <div id="adminImagePreviewArea" class="hidden mt-4">
-            <img id="adminPreviewImg" src="" alt="預覽圖" class="max-h-64 mx-auto rounded-lg shadow border mb-3">
-            <div class="flex justify-center space-x-2">
-              <button onclick="removeUploadedImage()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">
-                移除圖片
+        <!-- 常態每週特選與例湯手動設定 -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
+        <div>
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
+            <h3 class="font-bold mood-green-text text-lg">
+              <i class="fa-solid fa-calendar-week mr-1"></i>本週特選、例湯與公休設定 (手動填寫)
+            </h3>
+            <div class="flex items-center space-x-2">
+              <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
               </button>
             </div>
           </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
         </div>
+      </div>
 
         <div>
           <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
