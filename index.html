@@ -588,19 +588,15 @@
 
       <!-- 常態每週特選與例湯手動設定 -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-4">
-        <div>
-          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
-            <h3 class="font-bold mood-green-text text-lg">
-              <i class="fa-solid fa-calendar-week mr-1"></i>本週特選、例湯與公休設定 (手動填寫)
-            </h3>
-            <div class="flex items-center space-x-2">
-              <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
-                <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
-              </button>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-2">
+          <h2 class="text-xl font-bold mood-green-text flex items-center">
+            <i class="fa-solid fa-calendar-week mr-2 text-emerald-700"></i>本週特選、例湯與公休設定 (手動填寫)
+          </h2>
+          <button onclick="saveWeeklyConfig()" class="mood-green hover:bg-emerald-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow transition cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存本週菜單設定
+          </button>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="weeklyEditFormGrid"></div>
       </div>
 
         <div>
