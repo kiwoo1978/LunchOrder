@@ -287,7 +287,7 @@
       }
     }
 
-    // 發送至 Gemini API 辨識
+    // 發送至 Gemini API 辨識 (使用官方指定 gemini-3.8-flash)
     async function startAiScan() {
       const apiKey = localStorage.getItem('moodfood_gemini_api_key');
       if (!apiKey || !base64ImageData) return;
@@ -333,8 +333,8 @@
 若圖片中特定日期標註為公休（例如公告公休三日、公休），請將該日期的 isClosed 設為 true，special 填寫 "店家公休"，soup 填寫 "公休"。`;
       }
 
-      // 改用目前官方穩定視覺模型 gemini-1.5-flash
-      const modelName = 'gemini-1.5-flash';
+      // 改用官方提示明確要求的 gemini-3.8-flash 模型
+      const modelName = 'gemini-3.8-flash';
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
       try {
