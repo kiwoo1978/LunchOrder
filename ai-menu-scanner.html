@@ -130,7 +130,6 @@
           <span class="text-xs text-gray-400 font-mono" id="scanTimeTag"></span>
         </div>
         
-        <!-- 顯示模式切換：直覺卡片 vs 原始代碼 -->
         <div class="flex items-center bg-gray-100 p-1 rounded-xl text-xs font-bold">
           <button type="button" onclick="switchResultTab('card')" id="tabBtnCard" class="px-3 py-1.5 rounded-lg bg-white text-indigo-900 shadow cursor-pointer">
             <i class="fa-solid fa-table-cells-large mr-1"></i> 視覺化卡片核對
@@ -141,10 +140,10 @@
         </div>
       </div>
 
-      <!-- 視覺化卡片容器 (依辨識模式動態產出表格或卡片) -->
+      <!-- 視覺化卡片容器 -->
       <div id="cardViewContainer" class="space-y-3"></div>
 
-      <!-- 原始 JSON 編輯器 (預設隱藏，供進階開發者使用) -->
+      <!-- 原始 JSON 編輯器 -->
       <div id="jsonViewContainer" class="hidden space-y-2">
         <textarea id="jsonEditor" rows="11" oninput="syncFromRawJson()"
           class="w-full bg-slate-900 text-emerald-400 font-mono text-xs p-3.5 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 leading-relaxed"></textarea>
@@ -175,7 +174,7 @@
     let currentMode = 'weekly';
     let base64ImageData = null;
     let mimeType = 'image/jpeg';
-    let currentParsedData = null; // 當前正在檢視/編輯的結構化資料
+    let currentParsedData = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedKey = localStorage.getItem('moodfood_gemini_api_key');
@@ -186,7 +185,6 @@
       checkScanButtonState();
     });
 
-    // 模式切換
     function switchMode(mode) {
       currentMode = mode;
       const lblFixed = document.getElementById('labelModeFixed');
@@ -200,7 +198,6 @@
       }
     }
 
-    // 視圖切換 (卡片 vs JSON)
     function switchResultTab(tab) {
       const cardBox = document.getElementById('cardViewContainer');
       const jsonBox = document.getElementById('jsonViewContainer');
@@ -220,7 +217,6 @@
       }
     }
 
-    // API Key 相關管理
     function saveApiKey() {
       const val = document.getElementById('apiKeyInput').value.trim();
       if (!val) {
@@ -264,7 +260,6 @@
       }
     }
 
-    // 檔案選取與拖曳
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -326,7 +321,7 @@
       }
     }
 
-    // 發送至 Gemini API 辨識
+    // 發送至 Gemini API 辨識（含自動容錯與備用模型輪替）
     async function startAiScan() {
       const apiKey = localStorage.getItem('moodfood_gemini_api_key');
       if (!apiKey || !base64ImageData) return;
@@ -334,7 +329,6 @@
       const btn = document.getElementById('btnStartScan');
       const btnText = document.getElementById('btnScanText');
       btn.disabled = true;
-      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Gemini 視覺模型分析中...';
 
       let promptText = "";
       if (currentMode === 'fixed') {
@@ -372,54 +366,73 @@
 若圖片中特定日期標註為公休（例如公告公休三日、公休），請將該日期的 isClosed 設為 true，special 填寫 "店家公休"，soup 填寫 "公休"。`;
       }
 
-      const modelName = 'gemini-3.8-flash';
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      // 模型輪替序列：gemini-3.8-flash 尖峰繁忙時，自動降級嘗試 gemini-1.5-flash / gemini-1.5-pro
+      const candidateModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+      let lastErrorMessage = '';
+      let successData = null;
 
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: promptText },
-                {
-                  inline_data: {
-                    mime_type: mimeType,
-                    data: base64ImageData
+      for (let i = 0; i < candidateModels.length; i++) {
+        const modelName = candidateModels[i];
+        btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 使用 ${modelName} 辨識中...`;
+
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: promptText },
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: base64ImageData
+                    }
                   }
-                }
-              ]
-            }],
-            generationConfig: {
-              temperature: 0.1,
-              response_mime_type: "application/json"
-            }
-          })
-        });
+                ]
+              }],
+              generationConfig: {
+                temperature: 0.1,
+                response_mime_type: "application/json"
+              }
+            })
+          });
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.message || 'API 辨識失敗');
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error.message || `模型 ${modelName} 請求失敗`);
+          }
 
-        let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+          rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
-        currentParsedData = JSON.parse(rawText);
+          successData = JSON.parse(rawText);
+          break; // 成功解析即中斷迴圈
+        } catch (err) {
+          console.warn(`[模型 ${modelName} 失敗，嘗試備用方案]`, err);
+          lastErrorMessage = err.message;
+          // 若不是最後一個模型，延遲 1 秒後重試下一個
+          if (i < candidateModels.length - 1) {
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        }
+      }
 
-        // 渲染視覺化卡片與同步 JSON 框
+      if (successData) {
+        currentParsedData = successData;
         renderVerificationCards();
         document.getElementById('jsonEditor').value = JSON.stringify(currentParsedData, null, 2);
-        
         switchResultTab('card');
         document.getElementById('resultSection').classList.remove('hidden');
-        document.getElementById('scanTimeTag').textContent = `解析時間：${new Date().toLocaleTimeString('zh-TW')}`;
+        document.getElementById('scanTimeTag').textContent = `解析完成：${new Date().toLocaleTimeString('zh-TW')}`;
         showToast('🎉 菜單分析完成！請核對下方卡片內容');
-      } catch (err) {
-        console.error("AI 辨識錯誤:", err);
-        alert(`辨識失敗: ${err.message}`);
-      } finally {
-        checkScanButtonState();
+      } else {
+        alert(`辨識失敗: 伺服器繁忙，所有備用模型皆暫時無法處理，請稍後重試。\n(錯誤詳情: ${lastErrorMessage})`);
       }
+
+      btn.disabled = false;
+      checkScanButtonState();
     }
 
     /**************************************************************
@@ -430,7 +443,6 @@
       if (!box || !currentParsedData) return;
 
       if (currentMode === 'weekly') {
-        // 週一至週六排程直覺卡片
         let html = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">`;
         [1, 2, 3, 4, 5, 6].forEach(k => {
           const item = currentParsedData[k] || { dayLabel: `星期${['一','二','三','四','五','六'][k-1]}`, dateStr: '', special: '', soup: '', isClosed: false };
@@ -469,10 +481,8 @@
         html += `</div>`;
         box.innerHTML = html;
       } else {
-        // 常態固定菜單卡片
         let html = `<div class="space-y-3">`;
 
-        // 餐盒類
         html += `<div class="bg-gray-50 p-3 rounded-xl border">
           <p class="font-bold text-xs text-indigo-950 mb-2">🍱 餐盒品項 (${currentParsedData.bento?.length || 0} 項)</p>
           <div class="space-y-1.5">`;
@@ -488,7 +498,6 @@
         });
         html += `</div></div>`;
 
-        // 單點類
         html += `<div class="bg-gray-50 p-3 rounded-xl border">
           <p class="font-bold text-xs text-amber-950 mb-2">🍖 單點品項 (${currentParsedData.alacarte?.length || 0} 項)</p>
           <div class="space-y-1.5">`;
@@ -507,7 +516,6 @@
       }
     }
 
-    // 更新特選欄位並連動 JSON 視圖
     function updateWeeklyField(dayIndex, field, value) {
       if (!currentParsedData[dayIndex]) return;
       currentParsedData[dayIndex][field] = value;
@@ -521,7 +529,6 @@
       document.getElementById('jsonEditor').value = JSON.stringify(currentParsedData, null, 2);
     }
 
-    // 更新常態菜單欄位並連動 JSON 視圖
     function updateFixedField(category, index, field, value) {
       if (!currentParsedData[category] || !currentParsedData[category][index]) return;
       currentParsedData[category][index][field] = value;
@@ -531,18 +538,14 @@
       document.getElementById('jsonEditor').value = JSON.stringify(currentParsedData, null, 2);
     }
 
-    // 當管理者手動編輯 raw JSON 時同步回卡片
     function syncFromRawJson() {
       try {
         const txt = document.getElementById('jsonEditor').value;
         currentParsedData = JSON.parse(txt);
         renderVerificationCards();
-      } catch (e) {
-        // 使用者還在輸入中尚未閉合 JSON，略過不拋錯
-      }
+      } catch (e) {}
     }
 
-    // 將資料同步回主頁面
     function sendDataToMainPage(shouldClose) {
       if (!currentParsedData) {
         alert('尚無辨識資料可送出！');
@@ -558,7 +561,6 @@
         localStorage.setItem('moodfood_ai_pending_weekly', JSON.stringify(currentParsedData));
       }
 
-      // 透過 postMessage 傳遞給 opener 主頁面
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage({
           type: 'MOODFOOD_AI_MENU_PARSED',
