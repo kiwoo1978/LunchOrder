@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 智慧菜單辨識工作台 - 牧饗手作食研</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    
+    <!-- 頂部標題列 -->
+    <header class="bg-indigo-900 text-white p-5 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-700 flex items-center justify-center text-xl text-indigo-200">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl font-bold">AI 智慧菜單辨識工作台</h1>
+            <span class="text-xs bg-indigo-500/40 text-indigo-200 border border-indigo-400 px-2 py-0.5 rounded-full font-bold">子頁面</span>
+          </div>
+          <p class="text-xs text-indigo-300 mt-0.5">使用 Google Gemini 視覺模型解析菜單並同步回主系統</p>
+        </div>
+      </div>
+      <button onclick="window.close()" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition cursor-pointer">
+        <i class="fa-solid fa-xmark mr-1"></i> 關閉此頁面
+      </button>
+    </header>
+
+    <!-- 1. API Key 設定區塊 -->
+    <section class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="text-sm font-bold text-gray-800 flex items-center">
+          <i class="fa-solid fa-key mr-2 text-indigo-600"></i>Gemini API Key 設定
+        </h2>
+        <span id="keyStatusBadge" class="text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-500">未設定</span>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <div class="relative flex-1">
+          <input type="password" id="apiKeyInput" placeholder="請貼上您的 Google Gemini API Key (AIzaSy...)" 
+            class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-600 font-mono">
+          <button type="button" onclick="toggleKeyVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-sm">
+            <i class="fa-regular fa-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+        <button onclick="saveApiKey()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow shrink-0 cursor-pointer">
+          <i class="fa-solid fa-floppy-disk mr-1"></i> 儲存金鑰
+        </button>
+        <button onclick="clearApiKey()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold px-3 py-2 rounded-xl transition shrink-0 cursor-pointer">
+          清除
+        </button>
+      </div>
+      <p class="text-[11px] text-gray-400">
+        金鑰僅儲存於您當前瀏覽器的 LocalStorage，不會上傳至伺服器。
+      </p>
+    </section>
+
+    <!-- 2. 辨識模式與圖片上傳區塊 -->
+    <section class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="text-sm font-bold text-gray-800 flex items-center">
+          <i class="fa-solid fa-image mr-2 text-indigo-600"></i>選擇辨識類別與上傳圖片
+        </h2>
+      </div>
+
+      <!-- 辨識類別切換 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label class="p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-indigo-600 bg-indigo-50/50" id="labelModeFixed">
+          <input type="radio" name="scanMode" value="fixed" checked onchange="switchMode('fixed')" class="w-4 h-4 text-indigo-600">
+          <div>
+            <p class="font-bold text-sm text-gray-800">1. 常態固定菜單</p>
+            <p class="text-[11px] text-gray-500">餐盒、單點主菜、例湯與飲品價目表</p>
+          </div>
+        </label>
+        <label class="p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-gray-200 bg-white" id="labelModeWeekly">
+          <input type="radio" name="scanMode" value="weekly" onchange="switchMode('weekly')" class="w-4 h-4 text-indigo-600">
+          <div>
+            <p class="font-bold text-sm text-gray-800">2. 本週特選與例湯排程</p>
+            <p class="text-[11px] text-gray-500">週一至週六特選主菜、例湯與公休表</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- 拖曳或選擇檔案區 -->
+      <div id="dropZone" onclick="document.getElementById('fileInput').click()" 
+        class="border-2 border-dashed border-gray-300 hover:border-indigo-500 bg-gray-50/50 rounded-2xl p-6 text-center cursor-pointer transition">
+        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+        <div class="space-y-2">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-500"></i>
+          <p class="text-sm font-bold text-gray-700">點擊選擇菜單照片 或 將圖片拖曳至此</p>
+          <p class="text-xs text-gray-400">支援 JPG、PNG、WEBP 等格式圖片</p>
+        </div>
+      </div>
+
+      <!-- 圖片預覽 -->
+      <div id="previewContainer" class="hidden relative rounded-xl overflow-hidden border border-gray-200 bg-gray-900 flex justify-center max-h-80">
+        <img id="imagePreview" src="" alt="菜單預覽" class="object-contain max-h-80 w-auto">
+        <button onclick="removeImage()" class="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-7 h-7 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- 開始辨識按鈕 -->
+      <button onclick="startAiScan()" id="btnStartScan" disabled 
+        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition shadow flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed">
+        <i class="fa-solid fa-robot"></i>
+        <span id="btnScanText">請先設定 API Key 並上傳圖片</span>
+      </button>
+    </section>
+
+    <!-- 3. 辨識結果預覽與校對編輯區 -->
+    <section id="resultSection" class="hidden bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <h2 class="text-sm font-bold text-gray-800">辨識成果預覽 (可直接手動修訂 JSON)</h2>
+        </div>
+        <span class="text-xs text-gray-400 font-mono" id="scanTimeTag"></span>
+      </div>
+
+      <textarea id="jsonEditor" rows="12" 
+        class="w-full bg-slate-900 text-emerald-400 font-mono text-xs p-3.5 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 leading-relaxed"></textarea>
+
+      <!-- 送回主頁面按鈕組 -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-1">
+        <p class="text-xs text-gray-500">
+          確認內容無誤後，點擊右方按鈕即可將資料送回主頁面並儲存於暫存區。
+        </p>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button onclick="sendDataToMainPage(false)" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center space-x-1 cursor-pointer">
+            <i class="fa-solid fa-paper-plane mr-1"></i> 回傳資料至主系統
+          </button>
+          <button onclick="sendDataToMainPage(true)" class="flex-1 sm:flex-none bg-indigo-800 hover:bg-indigo-900 text-white font-bold px-4 py-2.5 rounded-xl transition shadow text-xs flex items-center justify-center space-x-1 cursor-pointer">
+            回傳並關閉
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast 訊息提示 -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-4 py-2 rounded-full shadow-lg transition z-50"></div>
+
+  <script>
+    let currentMode = 'fixed';
+    let base64ImageData = null;
+    let mimeType = 'image/jpeg';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedKey = localStorage.getItem('moodfood_gemini_api_key');
+      if (savedKey) {
+        document.getElementById('apiKeyInput').value = savedKey;
+        updateKeyStatus(true);
+      }
+      checkScanButtonState();
+    });
+
+    // 模式切換
+    function switchMode(mode) {
+      currentMode = mode;
+      const lblFixed = document.getElementById('labelModeFixed');
+      const lblWeekly = document.getElementById('labelModeWeekly');
+      if (mode === 'fixed') {
+        lblFixed.className = 'p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-indigo-600 bg-indigo-50/50';
+        lblWeekly.className = 'p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-gray-200 bg-white';
+      } else {
+        lblFixed.className = 'p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-gray-200 bg-white';
+        lblWeekly.className = 'p-3 border-2 rounded-xl flex items-center space-x-3 cursor-pointer transition border-indigo-600 bg-indigo-50/50';
+      }
+    }
+
+    // API Key 相關管理
+    function saveApiKey() {
+      const val = document.getElementById('apiKeyInput').value.trim();
+      if (!val) {
+        alert('請先輸入 API Key！');
+        return;
+      }
+      localStorage.setItem('moodfood_gemini_api_key', val);
+      updateKeyStatus(true);
+      checkScanButtonState();
+      showToast('✅ Gemini API Key 已安全儲存！');
+    }
+
+    function clearApiKey() {
+      localStorage.removeItem('moodfood_gemini_api_key');
+      document.getElementById('apiKeyInput').value = '';
+      updateKeyStatus(false);
+      checkScanButtonState();
+      showToast('已清除 API Key');
+    }
+
+    function updateKeyStatus(hasKey) {
+      const badge = document.getElementById('keyStatusBadge');
+      if (hasKey) {
+        badge.textContent = '金鑰已就緒';
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+      } else {
+        badge.textContent = '未設定金鑰';
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-bold bg-gray-100 text-gray-500';
+      }
+    }
+
+    function toggleKeyVisibility() {
+      const input = document.getElementById('apiKeyInput');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+
+    // 檔案選取與拖曳
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      processFile(file);
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-600', 'bg-indigo-50/40'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-indigo-600', 'bg-indigo-50/40'); });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-indigo-600', 'bg-indigo-50/40');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function processFile(file) {
+      if (!file.type.startsWith('image/')) {
+        alert('請上傳圖片格式檔案！');
+        return;
+      }
+      mimeType = file.type;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fullDataUrl = event.target.result;
+        base64ImageData = fullDataUrl.split(',')[1];
+        document.getElementById('imagePreview').src = fullDataUrl;
+        document.getElementById('previewContainer').classList.remove('hidden');
+        dropZone.classList.add('hidden');
+        checkScanButtonState();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+      base64ImageData = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('previewContainer').classList.add('hidden');
+      dropZone.classList.remove('hidden');
+      checkScanButtonState();
+    }
+
+    function checkScanButtonState() {
+      const hasKey = !!localStorage.getItem('moodfood_gemini_api_key');
+      const hasImg = !!base64ImageData;
+      const btn = document.getElementById('btnStartScan');
+      const txt = document.getElementById('btnScanText');
+
+      if (hasKey && hasImg) {
+        btn.disabled = false;
+        txt.textContent = '開始進行 AI 菜單辨識';
+      } else if (!hasKey) {
+        btn.disabled = true;
+        txt.textContent = '請先填寫並儲存 API Key';
+      } else {
+        btn.disabled = true;
+        txt.textContent = '請先上傳菜單圖片';
+      }
+    }
+
+    // 發送至 Gemini API 辨識
+    async function startAiScan() {
+      const apiKey = localStorage.getItem('moodfood_gemini_api_key');
+      if (!apiKey || !base64ImageData) return;
+
+      const btn = document.getElementById('btnStartScan');
+      const btnText = document.getElementById('btnScanText');
+      btn.disabled = true;
+      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Gemini 視覺模型分析中...';
+
+      let promptText = "";
+      if (currentMode === 'fixed') {
+        promptText = `你是一個專業的繁體中文菜單分析器。請分析這張菜單圖片，輸出純 JSON 格式，不要包含任何 markdown 標記（如 \`\`\`json）。
+資料結構格式規定如下：
+{
+  "bento": [
+    { "id": "b1", "name": "今日特選飯", "price": 90, "tag": "限量", "tagType": "badge-limit", "isSpecial": true },
+    { "id": "b2", "name": "餐盒名稱", "price": 100, "tag": "", "tagType": "" }
+  ],
+  "alacarte": [
+    { "id": "a1", "name": "單點名稱", "price": 70 }
+  ],
+  "drinkSoup": [
+    { "id": "d1", "name": "每日例湯", "price": 40, "note": "冬季限定 (10月~4月)", "isSoup": true },
+    { "id": "d2", "name": "新鮮現打西瓜汁", "price": 40, "note": "夏季限定 (5月~9月)", "isSummerDrink": true }
+  ]
+}
+注意：
+1. 餐盒第一個品項固定保留 id: "b1", name: "今日特選飯", price: 90。
+2. 辨識出的餐盒請從 b2 依序編號。
+3. 單點請從 a1 依序編號。
+4. 湯品與飲品請放入 drinkSoup。`;
+      } else {
+        promptText = `你是一個專業的繁體中文每週菜單分析器。請分析這張「每週特選菜單/特餐排程」圖片，輸出純 JSON 格式，不要包含任何 markdown 標記。
+資料結構為 1 到 6 的物件（代表星期一到星期六）：
+{
+  "1": { "dayLabel": "星期一", "dateStr": "10/12", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false },
+  "2": { "dayLabel": "星期二", "dateStr": "10/13", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false },
+  "3": { "dayLabel": "星期三", "dateStr": "10/14", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false },
+  "4": { "dayLabel": "星期四", "dateStr": "10/15", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false },
+  "5": { "dayLabel": "星期五", "dateStr": "10/16", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false },
+  "6": { "dayLabel": "星期六", "dateStr": "10/17", "special": "特餐名稱", "soup": "例湯名稱", "isClosed": false }
+}
+若當日為公休日或無供餐，請將 isClosed 設為 true，special 填寫 "公休"。`;
+      }
+
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                {
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: base64ImageData
+                  }
+                }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.1,
+              response_mime_type: "application/json"
+            }
+          })
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message || 'API 辨識失敗');
+
+        let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        // 格式化驗證
+        const parsed = JSON.parse(rawText);
+        document.getElementById('jsonEditor').value = JSON.stringify(parsed, null, 2);
+        document.getElementById('resultSection').classList.remove('hidden');
+        document.getElementById('scanTimeTag').textContent = `解析完成：${new Date().toLocaleTimeString('zh-TW')}`;
+        showToast('🎉 菜單分析完成！請檢視下方辨識結果');
+      } catch (err) {
+        console.error(err);
+        alert(`辨識失敗: ${err.message}`);
+      } finally {
+        checkScanButtonState();
+      }
+    }
+
+    // 將資料同步回主頁面
+    function sendDataToMainPage(shouldClose) {
+      const editor = document.getElementById('jsonEditor');
+      let parsedData = null;
+      try {
+        parsedData = JSON.parse(editor.value);
+      } catch (e) {
+        alert('JSON 格式有誤，請確認格式正確後再行送出！');
+        return;
+      }
+
+      const payload = {};
+      if (currentMode === 'fixed') {
+        payload.fixedMenu = parsedData;
+        localStorage.setItem('moodfood_ai_pending_fixed', JSON.stringify(parsedData));
+      } else {
+        payload.weeklyMenu = parsedData;
+        localStorage.setItem('moodfood_ai_pending_weekly', JSON.stringify(parsedData));
+      }
+
+      // 透過 postMessage 傳遞給 opener 主頁面
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({
+          type: 'MOODFOOD_AI_MENU_PARSED',
+          payload: payload
+        }, '*');
+      }
+
+      showToast('🚀 已將辨識資料回傳給主系統！');
+
+      if (shouldClose) {
+        setTimeout(() => window.close(), 800);
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+  </script>
+</body>
+</html>
