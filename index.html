@@ -345,11 +345,7 @@
           </label>
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
-            <span class="text-emerald-800 font-bold">僅列已結清同仁</span>			
-          </label>
-		  <label class="inline-flex items-center space-x-1 cursor-pointer">
-            <input type="radio" name="exportFilter" value="summaryOnly" onchange="changeExportMode('summaryOnly')" class="text-emerald-700">
-            <span class="text-indigo-800 font-bold">僅列餐點總計 (給店家/精簡)</span>
+            <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
         </div>
 
@@ -2526,12 +2522,9 @@
           exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`);
         });
       }
+      exportLines.push(`----------------------------------------`);
 
-      // 🌟 新增：如果是「僅列餐點總計」，只輸出上方餐點統計，不追加下方的同仁名單
-      if (state.exportFilterMode === 'summaryOnly') {
-        // 直接結束，不附加任何同仁名單
-      } else if (state.exportFilterMode === 'all') {
-        exportLines.push(`----------------------------------------`);
+      if (state.exportFilterMode === 'all') {
         exportLines.push(`💰 【同仁訂購與收款明細】（共 ${totalPeople} 人，已收 $${totalPaidReceived} / 待收 $${totalPendingToCollect}）`);
         state.orders.forEach((o, i) => {
           let tag = o.paid ? '[已結清✅]' : '[未付款❌]';
@@ -2555,7 +2548,6 @@
         }
 
       } else if (state.exportFilterMode === 'unpaidOnly') {
-        exportLines.push(`----------------------------------------`);
         const unpaids = state.orders.filter(o => !o.paid || (o.diff && o.diff > 0));
         exportLines.push(`🚨 【待繳費 / 待補差額名單】（共 ${unpaids.length} 人 ｜ 待收總計：$${totalPendingToCollect}）`);
         if (unpaids.length === 0) {
@@ -2570,7 +2562,6 @@
         }
 
       } else if (state.exportFilterMode === 'paidOnly') {
-        exportLines.push(`----------------------------------------`);
         const paids = state.orders.filter(o => o.paid && (!o.diff || o.diff <= 0));
         exportLines.push(`✅ 【已結清同仁名單】（共 ${paids.length} 人）`);
         if (paids.length === 0) {
@@ -2584,6 +2575,7 @@
 
       const exportArea = document.getElementById('exportTextarea');
       if (exportArea) exportArea.value = exportLines.join('\n');
+    }
 
     function toggleOrderPaid(idx, isChecked) {
       if (!state.orders[idx]) return;
