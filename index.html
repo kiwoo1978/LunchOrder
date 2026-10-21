@@ -319,7 +319,7 @@
         <div id="specialOrderRosterBox" class="space-y-2 pt-2"></div>
       </div>
 
-      <!-- 結單匯出區 (含四種過濾模式) -->
+      <!-- 結單匯出區 (支援 4 種模式) -->
       <div class="mood-card rounded-xl p-5 shadow-sm space-y-3">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
@@ -347,9 +347,10 @@
             <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
             <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
+          <!-- 🌟 優化命名：餐點統計與同仁分派名單 (發餐對照) -->
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="summaryOnly" onchange="changeExportMode('summaryOnly')" class="text-emerald-700">
-            <span class="text-indigo-800 font-bold">僅列餐點總計 (給店家/精簡)</span>
+            <span class="text-indigo-800 font-bold">餐點統計與同仁分派名單 (發餐對照)</span>
           </label>
         </div>
 
@@ -938,7 +939,7 @@
 
         checkDailyAutoReset();
 
-        // 🌟 自動記憶管理員帳號密碼
+        // 記憶登入帳號密碼
         const rememberCreds = sGet('moodfood_admin_creds');
         if (rememberCreds) {
           try {
@@ -952,7 +953,7 @@
           } catch(e) {}
         }
 
-        // 🌟 核心修改：若先前已登入管理員，重新整理後自動維持管理員身分
+        // 重新整理自動維持管理員登入狀態
         const isPreviouslyLoggedIn = sGet('moodfood_admin_logged_in') === 'true';
         if (isPreviouslyLoggedIn) {
           state.isAdmin = true;
@@ -1192,7 +1193,6 @@
       if (u === 'admin' && p === 'tiac123456') {
         state.isAdmin = true;
 
-        // 🌟 記錄登入狀態至 localStorage，確保重新整理免重複登入
         sSet('moodfood_admin_logged_in', 'true');
 
         if (isRemember) {
@@ -1214,7 +1214,6 @@
 
     function logoutAdmin() {
       state.isAdmin = false;
-      // 🌟 登出時徹底移除登入標記
       try { localStorage.removeItem('moodfood_admin_logged_in'); } catch(e) {}
 
       document.getElementById('adminNavTabs')?.classList.add('hidden');
@@ -2523,7 +2522,7 @@
     }
 
     /**************************************************************
-     * 後台訂單統計與匯出 (支援 4 種匯出模式)
+     * 後台訂單統計與匯出 (支援 4 種匯出模式，包含餐點與分派名單)
      **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
@@ -2555,9 +2554,15 @@
         }
 
         (o.detailedItems || []).forEach(it => {
-          if (!itemSummaryMap[it.name]) itemSummaryMap[it.name] = { qty: 0, price: it.price, subtotal: 0 };
+          if (!itemSummaryMap[it.name]) {
+            itemSummaryMap[it.name] = { qty: 0, price: it.price, subtotal: 0, buyers: [] };
+          }
           itemSummaryMap[it.name].qty += it.qty;
           itemSummaryMap[it.name].subtotal += it.qty * it.price;
+          // 紀錄點餐人姓名 (點幾份就記錄幾次或顯示數量)
+          for (let q = 0; q < it.qty; q++) {
+            itemSummaryMap[it.name].buyers.push(o.name);
+          }
         });
       });
 
@@ -2667,12 +2672,19 @@
         exportLines.push(`(尚無餐點)`);
       } else {
         itemKeys.forEach(name => {
-          exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`);
+          if (state.exportFilterMode === 'summaryOnly') {
+            // 🌟 核心修改：如果是分派模式，括號內輸出訂購人姓名中間以 / 分隔
+            const buyersStr = (itemSummaryMap[name].buyers || []).join(' / ');
+            exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 (${buyersStr})`);
+          } else {
+            // 原本模式維持顯示品項總金額
+            exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`);
+          }
         });
       }
 
       if (state.exportFilterMode === 'summaryOnly') {
-        // 僅列餐點總計：不加入下方同仁訂購與繳費明細
+        // 發餐對照模式不附帶下方同仁繳費清單
       } else if (state.exportFilterMode === 'all') {
         exportLines.push(`----------------------------------------`);
         exportLines.push(`💰 【同仁訂購與收款明細】（共 ${totalPeople} 人，已收 $${totalPaidReceived} / 待收 $${totalPendingToCollect}）`);
