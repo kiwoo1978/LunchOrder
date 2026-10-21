@@ -347,7 +347,6 @@
             <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
             <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
-          <!-- 🌟 新增：僅列餐點總計選項 -->
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="summaryOnly" onchange="changeExportMode('summaryOnly')" class="text-emerald-700">
             <span class="text-indigo-800 font-bold">僅列餐點總計 (給店家/精簡)</span>
@@ -939,6 +938,7 @@
 
         checkDailyAutoReset();
 
+        // 🌟 自動記憶管理員帳號密碼
         const rememberCreds = sGet('moodfood_admin_creds');
         if (rememberCreds) {
           try {
@@ -950,6 +950,15 @@
             if (pInput && creds.p) pInput.value = creds.p;
             if (chkRemember) chkRemember.checked = true;
           } catch(e) {}
+        }
+
+        // 🌟 核心修改：若先前已登入管理員，重新整理後自動維持管理員身分
+        const isPreviouslyLoggedIn = sGet('moodfood_admin_logged_in') === 'true';
+        if (isPreviouslyLoggedIn) {
+          state.isAdmin = true;
+          document.getElementById('adminNavTabs')?.classList.remove('hidden');
+          const adminBtnText = document.getElementById('adminBtnText');
+          if (adminBtnText) adminBtnText.textContent = '管理後台';
         }
 
         const timeLimitCheck = document.getElementById('timeLimitEnabled');
@@ -1183,6 +1192,9 @@
       if (u === 'admin' && p === 'tiac123456') {
         state.isAdmin = true;
 
+        // 🌟 記錄登入狀態至 localStorage，確保重新整理免重複登入
+        sSet('moodfood_admin_logged_in', 'true');
+
         if (isRemember) {
           sSet('moodfood_admin_creds', JSON.stringify({ u, p }));
         } else {
@@ -1202,6 +1214,9 @@
 
     function logoutAdmin() {
       state.isAdmin = false;
+      // 🌟 登出時徹底移除登入標記
+      try { localStorage.removeItem('moodfood_admin_logged_in'); } catch(e) {}
+
       document.getElementById('adminNavTabs')?.classList.add('hidden');
       const adminBtnText = document.getElementById('adminBtnText');
       if (adminBtnText) adminBtnText.textContent = '管理員登入';
@@ -2656,7 +2671,6 @@
         });
       }
 
-      // 判斷不同模式的輸出內容
       if (state.exportFilterMode === 'summaryOnly') {
         // 僅列餐點總計：不加入下方同仁訂購與繳費明細
       } else if (state.exportFilterMode === 'all') {
