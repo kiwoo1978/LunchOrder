@@ -321,7 +321,34 @@
       }
     }
 
-    // 發送至 Gemini API 辨識（含自動容錯與備用模型輪替）
+    // 🌟 動態獲取當前 API Key 真正支援視覺生成的有效模型清單
+    async function getAvailableModelList(apiKey) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const data = await res.json();
+        if (data.models && Array.isArray(data.models)) {
+          const valid = data.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+
+          // 按照優先級排序：2.5-flash / 2.0-flash / 1.5-flash
+          const priority = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'];
+          const sorted = [];
+          priority.forEach(p => {
+            if (valid.includes(p)) sorted.push(p);
+          });
+          valid.forEach(v => {
+            if (!sorted.includes(v) && v.includes('gemini') && v.includes('flash')) sorted.push(v);
+          });
+          if (sorted.length > 0) return sorted;
+        }
+      } catch (e) {
+        console.warn('動態獲取模型清單失敗，使用備用固定清單:', e);
+      }
+      return ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    }
+
+    // 發送至 Gemini API 辨識
     async function startAiScan() {
       const apiKey = localStorage.getItem('moodfood_gemini_api_key');
       if (!apiKey || !base64ImageData) return;
@@ -366,14 +393,15 @@
 若圖片中特定日期標註為公休（例如公告公休三日、公休），請將該日期的 isClosed 設為 true，special 填寫 "店家公休"，soup 填寫 "公休"。`;
       }
 
-      // 模型輪替序列：gemini-3.8-flash 尖峰繁忙時，自動降級嘗試 gemini-1.5-flash / gemini-1.5-pro
-      const candidateModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 查詢可用模型中...';
+      const candidateModels = await getAvailableModelList(apiKey);
+
       let lastErrorMessage = '';
       let successData = null;
 
       for (let i = 0; i < candidateModels.length; i++) {
         const modelName = candidateModels[i];
-        btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 使用 ${modelName} 辨識中...`;
+        btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> 使用 ${modelName} 辨識中 (${i + 1}/${candidateModels.length})...`;
 
         try {
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -401,20 +429,19 @@
 
           const data = await response.json();
           if (data.error) {
-            throw new Error(data.error.message || `模型 ${modelName} 請求失敗`);
+            throw new Error(data.error.message || `模型 ${modelName} 呼叫失敗`);
           }
 
           let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
           rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
           successData = JSON.parse(rawText);
-          break; // 成功解析即中斷迴圈
+          break; // 成功解析即結束
         } catch (err) {
-          console.warn(`[模型 ${modelName} 失敗，嘗試備用方案]`, err);
+          console.warn(`[模型 ${modelName} 失敗，嘗試下一組]`, err);
           lastErrorMessage = err.message;
-          // 若不是最後一個模型，延遲 1 秒後重試下一個
           if (i < candidateModels.length - 1) {
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 800));
           }
         }
       }
@@ -428,7 +455,7 @@
         document.getElementById('scanTimeTag').textContent = `解析完成：${new Date().toLocaleTimeString('zh-TW')}`;
         showToast('🎉 菜單分析完成！請核對下方卡片內容');
       } else {
-        alert(`辨識失敗: 伺服器繁忙，所有備用模型皆暫時無法處理，請稍後重試。\n(錯誤詳情: ${lastErrorMessage})`);
+        alert(`辨識失敗: 目前所有可用模型皆暫時無法處理，請稍後重試。\n(錯誤詳情: ${lastErrorMessage})`);
       }
 
       btn.disabled = false;
@@ -446,7 +473,7 @@
         let html = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">`;
         [1, 2, 3, 4, 5, 6].forEach(k => {
           const item = currentParsedData[k] || { dayLabel: `星期${['一','二','三','四','五','六'][k-1]}`, dateStr: '', special: '', soup: '', isClosed: false };
-          const isClosed = !!item.isClosed;
+          const isClosed = (item.isClosed === true || item.isClosed === 'true');
 
           html += `
             <div class="p-3.5 rounded-xl border space-y-2.5 transition ${isClosed ? 'bg-red-50/70 border-red-300' : 'bg-gray-50 border-gray-200'}">
