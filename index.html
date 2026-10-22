@@ -347,7 +347,6 @@
             <input type="radio" name="exportFilter" value="paidOnly" onchange="changeExportMode('paidOnly')" class="text-emerald-700">
             <span class="text-emerald-800 font-bold">僅列已結清同仁</span>
           </label>
-          <!-- 🌟 優化命名：餐點統計與同仁分派名單 (發餐對照) -->
           <label class="inline-flex items-center space-x-1 cursor-pointer">
             <input type="radio" name="exportFilter" value="summaryOnly" onchange="changeExportMode('summaryOnly')" class="text-emerald-700">
             <span class="text-indigo-800 font-bold">餐點統計與同仁分派名單 (發餐對照)</span>
@@ -779,12 +778,12 @@
     };
 
     const DEFAULT_WEEKLY_MENU = {
-      1: { dayLabel: '星期一', dateStr: '10/12', special: '秘制鹹豬肉', soup: '味噌貢丸蛋花湯', isClosed: false },
-      2: { dayLabel: '星期二', dateStr: '10/13', special: '香草烤雞腿排', soup: '香菇雞湯', isClosed: false },
-      3: { dayLabel: '星期三', dateStr: '10/14', special: '沙茶羊肉', soup: '竹筍排骨湯', isClosed: false },
-      4: { dayLabel: '星期四', dateStr: '10/15', special: '椒麻雞', soup: '魷魚螺肉蒜', isClosed: false },
-      5: { dayLabel: '星期五', dateStr: '10/16', special: 'BBQ肩小排', soup: '薑絲肝連湯', isClosed: false },
-      6: { dayLabel: '星期六', dateStr: '10/17', special: '番茄煲牛肉', soup: '剝皮辣椒雞湯', isClosed: false }
+      1: { dayLabel: '星期一', dateStr: '10/19', special: '橙汁排骨', soup: '玉米濃湯', isClosed: false },
+      2: { dayLabel: '星期二', dateStr: '10/20', special: '紅燒滷雞腿', soup: '蘿蔔玉米排骨湯', isClosed: false },
+      3: { dayLabel: '星期三', dateStr: '10/21', special: '黑胡椒豬柳', soup: '剝皮辣椒雞湯', isClosed: false },
+      4: { dayLabel: '星期四', dateStr: '10/22', special: '蔥鹽鴨肉', soup: '什錦蔬菜排骨湯', isClosed: false },
+      5: { dayLabel: '星期五', dateStr: '10/23', special: '三杯嫩雞丁', soup: '竹筍雞湯', isClosed: false },
+      6: { dayLabel: '星期六', dateStr: '10/24', special: '店家公休', soup: '公休', isClosed: true }
     };
 
     const curMonth = new Date().getMonth() + 1;
@@ -828,6 +827,7 @@
       return `${y}-${m}-${d}`;
     }
 
+    // 🌟 安全的同步函式，不再擅自清空他人訂單
     function syncOrdersToCloud(ordersList) {
       sSet('moodfood_orders', JSON.stringify(ordersList));
       const todayStr = getTodayDateString();
@@ -844,33 +844,18 @@
       }
     }
 
-    function checkDailyAutoReset() {
-      const todayStr = getTodayDateString();
-      const recordDate = state.lastOrderDate || sGet('moodfood_last_order_date');
-
-      if (recordDate && recordDate !== todayStr) {
-        state.orders = [];
-        state.specialQuotaLimit = 5;
-        state.lastOrderDate = todayStr;
-        sSet('moodfood_orders', '[]');
-        sSet('moodfood_special_quota', 5);
-        sSet('moodfood_last_order_date', todayStr);
-
-        if (db) {
-          db.ref('orders').set([]).catch(e => console.error(e));
-          db.ref('lastOrderDate').set(todayStr).catch(e => console.error(e));
-        }
-
-        renderAll();
-        console.log(`[系統提示] 已跨入新的一天 (${todayStr})，系統自動清空前一日訂餐紀錄！`);
-      }
-    }
-
+    // 🌟 修正後的 getDayInfo：保證布林值與索引安全
     function getDayInfo() {
       const day = Number(state.selectedDay) || 1;
       const dayData = (state.weeklyMenu && state.weeklyMenu[day]) ? state.weeklyMenu[day] : null;
       if (dayData && dayData.special) {
-        return dayData;
+        return {
+          dayLabel: dayData.dayLabel,
+          dateStr: dayData.dateStr,
+          special: dayData.special,
+          soup: dayData.soup,
+          isClosed: (dayData.isClosed === true || dayData.isClosed === 'true')
+        };
       }
       return DEFAULT_WEEKLY_MENU[day] || DEFAULT_WEEKLY_MENU[1];
     }
@@ -883,7 +868,7 @@
         if (daySelectEl) daySelectEl.value = state.selectedDay;
 
         const savedName = sGet('moodfood_user_name');
-        if (savedName) {
+        if (savedName && savedName !== 'admin') {
           const userNameInput = document.getElementById('userNameInput');
           if (userNameInput) userNameInput.value = savedName;
           const hint = document.getElementById('savedNameHint');
@@ -901,7 +886,14 @@
             const parsedWeekly = JSON.parse(localWeekly);
             const formatted = {};
             [1, 2, 3, 4, 5, 6].forEach(k => {
-              formatted[k] = parsedWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+              const src = parsedWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+              formatted[k] = {
+                dayLabel: src.dayLabel,
+                dateStr: src.dateStr,
+                special: src.special,
+                soup: src.soup,
+                isClosed: (src.isClosed === true || src.isClosed === 'true')
+              };
             });
             state.weeklyMenu = formatted;
           } catch(e) {}
@@ -937,9 +929,7 @@
         const localDate = sGet('moodfood_last_order_date');
         if (localDate) state.lastOrderDate = localDate;
 
-        checkDailyAutoReset();
-
-        // 記憶登入帳號密碼
+        // 記住管理員帳密
         const rememberCreds = sGet('moodfood_admin_creds');
         if (rememberCreds) {
           try {
@@ -953,7 +943,7 @@
           } catch(e) {}
         }
 
-        // 重新整理自動維持管理員登入狀態
+        // 重新整理自動登入管理後台
         const isPreviouslyLoggedIn = sGet('moodfood_admin_logged_in') === 'true';
         if (isPreviouslyLoggedIn) {
           state.isAdmin = true;
@@ -991,6 +981,7 @@
         updateEmergencyUI();
         updateTodayOpenBtnUI();
 
+        // 🌟 雲端即時同步（移除惡意自動清空 bug）
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -1005,26 +996,14 @@
 
           db.ref('lastOrderDate').on('value', snapshot => {
             const cloudDate = snapshot.val();
-            const todayStr = getTodayDateString();
             if (cloudDate) {
               state.lastOrderDate = cloudDate;
               sSet('moodfood_last_order_date', cloudDate);
-              if (cloudDate !== todayStr) {
-                checkDailyAutoReset();
-              }
-            } else {
-              db.ref('lastOrderDate').set(todayStr);
             }
           });
 
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
-            const todayStr = getTodayDateString();
-            if (state.lastOrderDate && state.lastOrderDate !== todayStr) {
-              checkDailyAutoReset();
-              return;
-            }
-
             if (data) {
               state.orders = Array.isArray(data) ? data : Object.values(data);
               sSet('moodfood_orders', JSON.stringify(state.orders));
@@ -1037,12 +1016,20 @@
             console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
           });
 
+          // 🌟 修正 weeklyMenu 讀取，處理 Firebase 陣列/物件差異
           db.ref('weeklyMenu').on('value', snapshot => {
             const cloudWeekly = snapshot.val();
             if (cloudWeekly) {
               const formatted = {};
               [1, 2, 3, 4, 5, 6].forEach(k => {
-                formatted[k] = cloudWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+                const src = cloudWeekly[k] || DEFAULT_WEEKLY_MENU[k];
+                formatted[k] = {
+                  dayLabel: src.dayLabel,
+                  dateStr: src.dateStr,
+                  special: src.special,
+                  soup: src.soup,
+                  isClosed: (src.isClosed === true || src.isClosed === 'true')
+                };
               });
               state.weeklyMenu = formatted;
               sSet('moodfood_weekly_menu', JSON.stringify(formatted));
@@ -1192,7 +1179,6 @@
 
       if (u === 'admin' && p === 'tiac123456') {
         state.isAdmin = true;
-
         sSet('moodfood_admin_logged_in', 'true');
 
         if (isRemember) {
@@ -1296,6 +1282,7 @@
       renderAll();
     }
 
+    // 🌟 修正每週菜單套用：強制校正布林值，防止公休判斷錯誤
     function applyAiWeeklyMenuData() {
       const dataToApply = pendingAiData.weeklyMenu || JSON.parse(sGet('moodfood_ai_pending_weekly') || 'null');
 
@@ -1304,7 +1291,19 @@
         return;
       }
 
-      state.weeklyMenu = dataToApply;
+      const formatted = {};
+      [1, 2, 3, 4, 5, 6].forEach(k => {
+        const d = dataToApply[k] || DEFAULT_WEEKLY_MENU[k];
+        formatted[k] = {
+          dayLabel: d.dayLabel || `星期${['一','二','三','四','五','六'][k-1]}`,
+          dateStr: String(d.dateStr || '').trim(),
+          special: String(d.special || '').trim(),
+          soup: String(d.soup || '').trim(),
+          isClosed: (d.isClosed === true || d.isClosed === 'true')
+        };
+      });
+
+      state.weeklyMenu = formatted;
       sSet('moodfood_weekly_menu', JSON.stringify(state.weeklyMenu));
 
       if (db) {
@@ -1724,8 +1723,6 @@
     }
 
     function checkTimeAndStatus() {
-      checkDailyAutoReset();
-
       const now = new Date();
       const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
       const timeDisplay = document.getElementById('currentTimeDisplay');
@@ -1893,7 +1890,7 @@
       if (tag) {
         if (isEm) {
           tag.textContent = '已啟用';
-          tag.className = 'text-xs px-2 py-0.5 rounded-font font-bold bg-red-600 text-white';
+          tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-red-600 text-white';
         } else {
           tag.textContent = '未啟用';
           tag.className = 'text-xs px-2 py-0.5 rounded font-bold bg-gray-300 text-gray-700';
@@ -2095,7 +2092,8 @@
         Array.from(selectEl.options).forEach(opt => {
           const d = state.weeklyMenu[opt.value];
           if (d) {
-            opt.textContent = d.isClosed 
+            const isClosed = (d.isClosed === true || d.isClosed === 'true');
+            opt.textContent = isClosed 
               ? `${d.dateStr} (${d.dayLabel}) - 【店家公休】`
               : `${d.dateStr} (${d.dayLabel}) - 特選：${d.special}`;
           }
@@ -2108,7 +2106,8 @@
           const d = state.weeklyMenu[k];
           if (!d) return '';
           const isCurrent = Number(k) === Number(state.selectedDay);
-          if (d.isClosed) {
+          const isClosed = (d.isClosed === true || d.isClosed === 'true');
+          if (isClosed) {
             return `
               <div class="p-2.5 rounded-lg border ${isCurrent ? 'bg-red-100 border-red-500 font-bold' : 'bg-red-50/60 border-red-200'}">
                 <div class="text-red-900 font-bold">${d.dateStr} (${d.dayLabel})</div>
@@ -2522,7 +2521,7 @@
     }
 
     /**************************************************************
-     * 後台訂單統計與匯出 (支援 4 種匯出模式，包含餐點與分派名單)
+     * 後台訂單統計與匯出
      **************************************************************/
     function changeExportMode(mode) {
       state.exportFilterMode = mode;
@@ -2559,7 +2558,6 @@
           }
           itemSummaryMap[it.name].qty += it.qty;
           itemSummaryMap[it.name].subtotal += it.qty * it.price;
-          // 紀錄點餐人姓名 (點幾份就記錄幾次或顯示數量)
           for (let q = 0; q < it.qty; q++) {
             itemSummaryMap[it.name].buyers.push(o.name);
           }
@@ -2673,11 +2671,9 @@
       } else {
         itemKeys.forEach(name => {
           if (state.exportFilterMode === 'summaryOnly') {
-            // 🌟 核心修改：如果是分派模式，括號內輸出訂購人姓名中間以 / 分隔
             const buyersStr = (itemSummaryMap[name].buyers || []).join(' / ');
             exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 (${buyersStr})`);
           } else {
-            // 原本模式維持顯示品項總金額
             exportLines.push(`▫️ ${name}：${itemSummaryMap[name].qty} 份 ($${itemSummaryMap[name].subtotal})`);
           }
         });
@@ -2781,7 +2777,7 @@
     }
 
     /**************************************************************
-     * 每週特選菜單手動編輯
+     * 🌟 每週特選菜單手動編輯（修正公休狀態綁定）
      **************************************************************/
     function renderWeeklyEditForm() {
       if (!state.isAdmin) return;
@@ -2789,7 +2785,7 @@
       if (!grid) return;
       grid.innerHTML = [1, 2, 3, 4, 5, 6].map(k => {
         const d = (state.weeklyMenu && state.weeklyMenu[k]) ? state.weeklyMenu[k] : DEFAULT_WEEKLY_MENU[k];
-        const isClosed = !d.isClosed;
+        const isClosed = (d.isClosed === true || d.isClosed === 'true');
         return `
           <div class="p-3 rounded-xl border space-y-2 transition ${isClosed ? 'bg-red-50/70 border-red-300' : 'bg-gray-50 border-gray-200'}">
             <div class="flex justify-between items-center border-b pb-1">
@@ -2799,7 +2795,7 @@
                   <input type="checkbox" id="edit_closed_${k}" ${isClosed ? 'checked' : ''} onchange="toggleDayClosed(${k}, this.checked)" class="w-4 h-4 text-red-600 rounded">
                   <span class="text-xs font-bold text-red-700">店家公休</span>
                 </label>
-                <input type="text" id="edit_date_${k}" value="${escapeHtml(d.dateStr)}" class="w-20 text-xs border rounded px-1.5 py-0.5 text-center bg-white">
+                <input type="text" id="edit_date_${k}" value="${escapeHtml(d.dateStr)}" class="w-20 text-xs border rounded px-1.5 py-0.5 text-center bg-white font-mono">
               </div>
             </div>
             <div>
@@ -2836,7 +2832,7 @@
           dateStr: (dateEl && dateEl.value.trim()) ? dateEl.value.trim() : (state.weeklyMenu[k]?.dateStr || defaultDay.dateStr),
           special: (specialEl && specialEl.value.trim()) ? specialEl.value.trim() : (state.weeklyMenu[k]?.special || defaultDay.special),
           soup: (soupEl && soupEl.value.trim()) ? soupEl.value.trim() : (state.weeklyMenu[k]?.soup || defaultDay.soup),
-          isClosed: closedEl ? closedEl.checked : (state.weeklyMenu[k]?.isClosed || false)
+          isClosed: closedEl ? closedEl.checked : (state.weeklyMenu[k]?.isClosed === true || state.weeklyMenu[k]?.isClosed === 'true')
         };
       });
 
