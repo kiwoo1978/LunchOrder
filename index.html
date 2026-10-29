@@ -2074,20 +2074,28 @@
       checkTimeAndStatus();
     }
 
-    function saveTimeConfigBtn() {
-      updateTimeConfig();
+	function saveTimeConfigBtn() {
+	  updateTimeConfig();
 
-      if (db) {
-        db.ref('settings/timeLimit').set(state.timeLimit).then(() => {
-          showToast('⏰ 訂餐時段設定已同步至雲端，全員即時生效！');
-        }).catch(err => {
-          console.error("雲端同步時段設定失敗:", err);
-          showToast('⚠️ 雲端同步失敗，僅儲存於本地');
-        });
-      } else {
-        showToast('⏰ 訂餐時段設定已儲存生效！');
-      }
-    }
+	  // 儲存新時段時，自動清除手動強制狀態，回歸定時判定
+	  state.manualOverride = null;
+	  sSet('moodfood_manual_override', '');
+	  if (db) {
+		db.ref('settings/manualOverride').set(null);
+	  }
+
+	  if (db) {
+		db.ref('settings/timeLimit').set(state.timeLimit).then(() => {
+		  showToast('⏰ 訂餐時段設定已儲存，並已解除手動鎖定回歸定時！');
+		}).catch(err => {
+		  console.error("雲端同步時段設定失敗:", err);
+		  showToast('⚠️ 雲端同步失敗，僅儲存於本地');
+		});
+	  } else {
+		showToast('⏰ 訂餐時段設定已儲存生效！');
+	  }
+	  checkTimeAndStatus();
+	}
 
     function toggleManualOverride() {
       const open = isCurrentlyOpen();
