@@ -193,6 +193,7 @@
 
       <!-- 常態菜單容器 -->
       <div id="regularMenuContainer" class="space-y-6">
+        <!-- 菜單：餐盒 -->
         <section>
           <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest">餐盒 <span class="text-xs font-normal opacity-80 ml-2">BENTO BOX</span></h2>
@@ -201,7 +202,7 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="menuBentoList"></div>
         </section>
 
-        <!-- 特選備案選擇區 -->
+        <!-- 特選備案選擇區 (僅當點選今日特選飯時出現) -->
         <section id="specialBackupSection" class="hidden mood-card rounded-xl p-4 border-2 border-amber-500 bg-amber-50/50 space-y-2">
           <div class="flex items-center space-x-2 text-amber-950 font-bold text-sm">
             <i class="fa-solid fa-arrows-rotate text-amber-700"></i>
@@ -215,7 +216,7 @@
           <p id="backupDiffHint" class="text-xs font-bold text-amber-800"></p>
         </section>
 
-        <!-- 單點 -->
+        <!-- 菜單：單點 -->
         <section>
           <div class="mood-brown text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest">單點 <span class="text-xs font-normal opacity-90 ml-2">A LA CARTE</span></h2>
@@ -223,7 +224,7 @@
           <div class="mood-card rounded-b-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="menuAlaCarteList"></div>
         </section>
 
-        <!-- 季節專區 -->
+        <!-- 菜單：季節專區 -->
         <section id="seasonalSection">
           <div class="mood-green text-white px-4 py-2 rounded-t-xl flex justify-between items-center">
             <h2 class="text-lg font-bold tracking-widest" id="drinkSoupSectionTitle">例湯 / 飲品專區</h2>
@@ -380,38 +381,25 @@
     <!-- ==================== 後台 2：供餐規則與菜單設定 ==================== -->
     <div id="viewWeekly" class="hidden space-y-6">
 
-      <!-- ==================== 🌟 AI 圖片辨識與智慧菜單同步 (已正式上線) ==================== -->
-      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-indigo-600/30 bg-indigo-50/20">
+      <!-- ==================== AI 辨識設定與菜單管理入口 ==================== -->
+      <div class="mood-card rounded-xl p-5 shadow-sm space-y-4 border-2 border-dashed border-indigo-400 bg-indigo-50/30">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-indigo-200 pb-3">
           <div>
             <div class="flex items-center space-x-2">
+              <span class="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">測試中功能</span>
               <h2 class="text-xl font-bold text-indigo-950 flex items-center">
                 <i class="fa-solid fa-wand-magic-sparkles mr-2 text-indigo-600"></i>AI 圖片辨識與智慧菜單同步
               </h2>
             </div>
             <p class="text-xs text-gray-600 mt-1">
-              可開啟獨立子頁面進行 AI 菜單圖片辨識，辨識完成後可將每週特餐或常態品項直接套用並同步至 Firebase 雲端。
+              連結至獨立子頁面進行 API Key 設定與菜單圖片辨識，辨識完成後可將結果儲存並即時更新至 Firebase 雲端。
             </p>
           </div>
           <div class="flex gap-2">
             <a href="ai-menu-scanner.html" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition flex items-center space-x-1 cursor-pointer">
-              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> 前往 AI 辨識頁面
+              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> 前往 AI 辨識設定頁面
             </a>
           </div>
-        </div>
-
-        <!-- 🌟 API Key 雲端同步設定 -->
-        <div class="bg-white p-3.5 rounded-xl border border-indigo-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-          <div class="flex-1">
-            <label class="block text-xs font-bold text-gray-700 mb-1">
-              <i class="fa-solid fa-key text-indigo-600 mr-1"></i>Gemini API Key 雲端同步管理
-            </label>
-            <input type="password" id="mainApiKeyInput" placeholder="儲存後自動同步至 Firebase 雲端供辨識頁面使用" 
-              class="w-full border rounded-lg px-3 py-1.5 text-xs font-mono bg-gray-50 focus:bg-white focus:outline-none">
-          </div>
-          <button onclick="saveApiKeyToCloud()" class="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition cursor-pointer self-end sm:self-auto">
-            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> 同步金鑰至雲端
-          </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -839,6 +827,7 @@
       return `${y}-${m}-${d}`;
     }
 
+    // 🌟 安全的同步函式，不再擅自清空他人訂單
     function syncOrdersToCloud(ordersList) {
       sSet('moodfood_orders', JSON.stringify(ordersList));
       const todayStr = getTodayDateString();
@@ -855,6 +844,7 @@
       }
     }
 
+    // 🌟 修正後的 getDayInfo：保證布林值與索引安全
     function getDayInfo() {
       const day = Number(state.selectedDay) || 1;
       const dayData = (state.weeklyMenu && state.weeklyMenu[day]) ? state.weeklyMenu[day] : null;
@@ -934,17 +924,12 @@
         if (localSeasonMode) state.seasonMode = localSeasonMode;
 
         const localQuota = sGet('moodfood_special_quota');
-        if (localQuota !== null && !isNaN(Number(localQuota))) state.specialQuotaLimit = Number(localQuota);
+        if (localQuota !== null) state.specialQuotaLimit = Number(localQuota);
 
         const localDate = sGet('moodfood_last_order_date');
         if (localDate) state.lastOrderDate = localDate;
 
-        const savedApiKey = sGet('moodfood_gemini_api_key');
-        if (savedApiKey) {
-          const apiInput = document.getElementById('mainApiKeyInput');
-          if (apiInput) apiInput.value = savedApiKey;
-        }
-
+        // 記住管理員帳密
         const rememberCreds = sGet('moodfood_admin_creds');
         if (rememberCreds) {
           try {
@@ -958,6 +943,7 @@
           } catch(e) {}
         }
 
+        // 重新整理自動登入管理後台
         const isPreviouslyLoggedIn = sGet('moodfood_admin_logged_in') === 'true';
         if (isPreviouslyLoggedIn) {
           state.isAdmin = true;
@@ -994,8 +980,8 @@
         renderBackupSelectOptions();
         updateEmergencyUI();
         updateTodayOpenBtnUI();
-        checkPendingAiStorage();
 
+        // 🌟 雲端即時同步（移除惡意自動清空 bug）
         if (db) {
           const statusText = document.getElementById('cloudStatusText');
           db.ref('.info/connected').on('value', snap => {
@@ -1016,28 +1002,6 @@
             }
           });
 
-          // 🌟 核心修正：即時監聽今日特餐配額雲端更新
-          db.ref('settings/specialQuota').on('value', snapshot => {
-            const cloudQuota = snapshot.val();
-            if (cloudQuota !== null && !isNaN(Number(cloudQuota))) {
-              state.specialQuotaLimit = Number(cloudQuota);
-              sSet('moodfood_special_quota', state.specialQuotaLimit);
-              const quotaInput = document.getElementById('inputSpecialQuota');
-              if (quotaInput) quotaInput.value = state.specialQuotaLimit;
-              renderAll();
-            }
-          });
-
-          // 🌟 即時監聽 Gemini API Key 雲端更新
-          db.ref('settings/geminiApiKey').on('value', snapshot => {
-            const cloudKey = snapshot.val();
-            if (cloudKey) {
-              sSet('moodfood_gemini_api_key', cloudKey);
-              const apiInput = document.getElementById('mainApiKeyInput');
-              if (apiInput && !apiInput.value) apiInput.value = cloudKey;
-            }
-          });
-
           db.ref('orders').on('value', snapshot => {
             const data = snapshot.val();
             if (data) {
@@ -1052,6 +1016,7 @@
             console.warn("讀取 Firebase 訂單失敗，使用本地備存：", error);
           });
 
+          // 🌟 修正 weeklyMenu 讀取，處理 Firebase 陣列/物件差異
           db.ref('weeklyMenu').on('value', snapshot => {
             const cloudWeekly = snapshot.val();
             if (cloudWeekly) {
@@ -1262,60 +1227,16 @@
       });
       const bottomBar = document.getElementById('bottomCartBar');
       if (bottomBar) bottomBar.classList.toggle('hidden', viewName !== 'order');
-      
-      if (viewName === 'weekly') {
-        checkPendingAiStorage();
-      }
       renderAll();
     }
 
     /**************************************************************
-     * AI 辨識資料接收與 API Key 雲端存取
+     * (測試中功能) 跨頁面 AI 辨識資料接收與 Firebase 儲存處理
      **************************************************************/
     let pendingAiData = {
       fixedMenu: null,
       weeklyMenu: null
     };
-
-    function saveApiKeyToCloud() {
-      const keyVal = document.getElementById('mainApiKeyInput')?.value.trim();
-      if (!keyVal) {
-        alert('請先輸入 API Key！');
-        return;
-      }
-      sSet('moodfood_gemini_api_key', keyVal);
-      if (db) {
-        db.ref('settings/geminiApiKey').set(keyVal).then(() => {
-          showToast('☁️ API Key 已成功同步至 Firebase 雲端！');
-        }).catch(err => {
-          console.error(err);
-          showToast('⚠️ 金鑰已儲存於本機，但雲端寫入失敗');
-        });
-      } else {
-        showToast('✅ API Key 已儲存於本機！');
-      }
-    }
-
-    function checkPendingAiStorage() {
-      const fixedRaw = sGet('moodfood_ai_pending_fixed');
-      const weeklyRaw = sGet('moodfood_ai_pending_weekly');
-
-      if (fixedRaw) {
-        try {
-          pendingAiData.fixedMenu = JSON.parse(fixedRaw);
-          const statusEl = document.getElementById('aiFixedStatusText');
-          if (statusEl) statusEl.innerHTML = '<b class="text-emerald-700">已收到辨識資料！</b>';
-        } catch(e) {}
-      }
-
-      if (weeklyRaw) {
-        try {
-          pendingAiData.weeklyMenu = JSON.parse(weeklyRaw);
-          const statusEl = document.getElementById('aiWeeklyStatusText');
-          if (statusEl) statusEl.innerHTML = '<b class="text-emerald-700">已收到辨識資料！</b>';
-        } catch(e) {}
-      }
-    }
 
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'MOODFOOD_AI_MENU_PARSED') {
@@ -1332,17 +1253,6 @@
         }
         showToast('🤖 已接收到子頁面傳來的 AI 辨識菜單資料！');
       }
-    });
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'moodfood_ai_pending_fixed' || e.key === 'moodfood_ai_pending_weekly') {
-        checkPendingAiStorage();
-        showToast('🤖 已自動偵測到新回傳的菜單辨識資料！');
-      }
-    });
-
-    window.addEventListener('focus', () => {
-      checkPendingAiStorage();
     });
 
     function applyAiFixedMenuData() {
@@ -1372,6 +1282,7 @@
       renderAll();
     }
 
+    // 🌟 修正每週菜單套用：強制校正布林值，防止公休判斷錯誤
     function applyAiWeeklyMenuData() {
       const dataToApply = pendingAiData.weeklyMenu || JSON.parse(sGet('moodfood_ai_pending_weekly') || 'null');
 
@@ -1560,7 +1471,7 @@
     }
 
     /**************************************************************
-     * 🌟 特餐配額與備案管理 (完整修正雲端即時同步)
+     * 特餐配額與備案管理
      **************************************************************/
     function getSpecialBentoStats() {
       const currentUserName = (document.getElementById('userNameInput')?.value || '').trim();
@@ -1574,11 +1485,9 @@
         }
       });
 
-      const quota = (state.specialQuotaLimit !== undefined && state.specialQuotaLimit !== null) 
-                    ? Number(state.specialQuotaLimit) 
-                    : 5;
+      const quota = state.specialQuotaLimit || 5;
       const remaining = Math.max(0, quota - orderedCount);
-      return { quota, orderedCount, remaining, isSoldOut: (quota <= 0 || remaining <= 0) };
+      return { quota, orderedCount, remaining, isSoldOut: remaining <= 0 };
     }
 
     function renderBackupSelectOptions() {
@@ -1613,28 +1522,14 @@
       }
     }
 
-    // 🌟 修正：配額調整即時更新本地與 Firebase 雲端
     function changeSpecialQuota(newVal) {
       const val = Math.max(0, Number(newVal));
       state.specialQuotaLimit = val;
       sSet('moodfood_special_quota', val);
-
-      // 強制同步輸入框數值
       const quotaInput = document.getElementById('inputSpecialQuota');
       if (quotaInput) quotaInput.value = val;
-
-      if (db) {
-        db.ref('settings/specialQuota').set(val).then(() => {
-          showToast(`📢 已同步至雲端！特餐實際供應上限已更新為：${val} 份`);
-        }).catch(err => {
-          console.error(err);
-          showToast('⚠️ 雲端更新配額失敗');
-        });
-      } else {
-        showToast(`📢 已更新特餐供應上限為：${val} 份！`);
-      }
-
       renderAll();
+      showToast(`📢 已更新今日特餐實際供應上限為：${val} 份！`);
     }
 
     function setSpecialQuota(val) {
@@ -1650,7 +1545,7 @@
       }
 
       const specialOrders = (state.orders || []).filter(o => (o.detailedItems || []).some(it => it.id === 'b1'));
-      const quota = (state.specialQuotaLimit !== undefined) ? Number(state.specialQuotaLimit) : 5;
+      const quota = state.specialQuotaLimit || 5;
 
       if (specialOrders.length === 0) {
         box.innerHTML = `<p class="text-xs text-gray-500 py-1">目前尚無同仁點選「今日特選飯」。</p>`;
@@ -2170,7 +2065,7 @@
           btnAddSoup.disabled = false;
           btnAddSoup.className = 'mood-green hover:bg-emerald-800 text-white text-sm px-3 py-1.5 rounded-lg shadow-sm transition order-btn cursor-pointer';
         }
-        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完 (配額 ${stats.quota} 份)</span>`;
+        if (hintBento) hintBento.innerHTML = `<span class="text-red-300 font-bold">⚠️ 今日特選飯已額滿售完</span>`;
       } else {
         if (tagRemain) {
           tagRemain.textContent = `剩餘 ${stats.remaining} 份`;
@@ -2247,7 +2142,7 @@
       const stats = getSpecialBentoStats();
       const dayInfo = getDayInfo();
       const isClosedDay = !!dayInfo.isClosed;
-      const isSoldOut = (isSpecial && stats.isSoldOut) || isClosedDay;
+      const isSoldOut = (isSpecial && (stats.remaining - qty <= 0)) || isClosedDay;
 
       let tagHtml = '';
       if (item.tag) {
@@ -2282,7 +2177,7 @@
             <span class="w-6 text-center font-bold text-base ${qty > 0 ? 'text-emerald-800' : 'text-gray-400'}">${qty}</span>
             <button onclick="updateCartQty('${item.id}', 1)" 
               class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'mood-green text-white hover:bg-emerald-800 cursor-pointer'} flex items-center justify-center font-bold"
-              ${isSoldOut ? `disabled title="${isClosedDay ? '本日公休' : '今日特選飯已額滿售完'}"` : ''}>
+              ${isSoldOut ? `disabled title="${isClosedDay ? '本日公休' : '今日特選飯已額滿'}"` : ''}>
               <i class="fa-solid fa-plus text-xs"></i>
             </button>
           </div>
@@ -2468,8 +2363,8 @@
       if (itemId === 'b1' && delta > 0) {
         const stats = getSpecialBentoStats();
         const currentInCart = state.currentCart['b1'] || 0;
-        if (stats.isSoldOut || (currentInCart + delta > stats.remaining)) {
-          alert(`⚠️ 今日特選飯目前配額已滿或已宣告售完 (供應上限: ${stats.quota} 份)！\n請選擇其他美味便當，感謝配合！`);
+        if (currentInCart + delta > stats.remaining) {
+          alert(`⚠️ 今日特選飯目前配額已滿 (剩餘 ${stats.remaining} 份)！\n請選擇其他美味便當，感謝配合！`);
           return;
         }
       }
@@ -2519,8 +2414,8 @@
       const specialQtyInCart = state.currentCart['b1'] || 0;
       if (specialQtyInCart > 0) {
         const stats = getSpecialBentoStats();
-        if (stats.isSoldOut || specialQtyInCart > stats.remaining) {
-          alert(`⚠️ 抱歉！今日特選飯目前已額滿售完 (配額 ${stats.quota} 份)！\n請更換其他餐點再重新送出。`);
+        if (specialQtyInCart > stats.remaining) {
+          alert(`⚠️ 抱歉！今日特選飯目前已無足夠名額！\n請更換其他餐點再重新送出。`);
           delete state.currentCart['b1'];
           renderAll();
           return;
@@ -2869,7 +2764,6 @@
       state.orders = [];
       state.specialQuotaLimit = 5;
       sSet('moodfood_special_quota', 5);
-      if (db) db.ref('settings/specialQuota').set(5);
       syncOrdersToCloud(state.orders);
       renderAll();
       showToast('已清空今日所有訂單');
@@ -2883,7 +2777,7 @@
     }
 
     /**************************************************************
-     * 每週特選菜單手動編輯
+     * 🌟 每週特選菜單手動編輯（修正公休狀態綁定）
      **************************************************************/
     function renderWeeklyEditForm() {
       if (!state.isAdmin) return;
